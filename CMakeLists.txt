@@ -3,4 +3,4 @@ project(hw5)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(hw5 bp.cpp)
+add_executable(hw5 bp.cpp hw3_output.cpp lex.yy.cpp parser.tab.cpp RegisterManager.cpp semantics.cpp)

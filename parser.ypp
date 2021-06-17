@@ -105,4 +105,8 @@ void yyerror(const char*){
 
 
 
-int main(){auto p= yyparse(); SymbolTable::GetInstance()->print_funcs(); return p;}
+int main(){
+    auto p= yyparse();
+    SymbolTable::GetInstance()->print_funcs();
+    return p;
+}
