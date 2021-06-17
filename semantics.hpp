@@ -1,8 +1,8 @@
 #ifndef HW5_Semantic_H
 #define HW5_Semantic_H
 
-#endif //HW5_Semantic_H
 #include "hw3_output.hpp"
+#include "RegisterManager.hpp"
 #include <iostream>
 #include <vector>
 
@@ -28,9 +28,10 @@ public:
 
 class Exp : public STYPE{
 protected:
-    Exp()=default;
+    explicit Exp(int val=0):val(val){}
     virtual ~Exp()=default;
 public:
+    int val;
     virtual Type* type() const = 0;
 };
 
@@ -49,32 +50,32 @@ bool is_bool(STYPE* e);
 
 class Num : public Exp{
 public:
-    int val;
-    explicit Num(const string name) : val(stoi(name)){};
+    explicit Num(const string val) : Exp(stoi(val)){};
     Type* type() const override;
 };
 
 class NumB : public Exp{
 public:
-    int val;
-    explicit NumB(const string name);;
+    explicit NumB(const string name):Exp(stoi(name)){
+        if(val>255)
+            output::errorByteTooLarge(yylineno, name);
+    };
     explicit NumB(const int val) : NumB(to_string(val)){};
     Type* type() const override;
 };
 
 class Boolean : public Exp{
 public:
-    explicit Boolean(){};
+    explicit Boolean(bool val):Exp(val){};
     Boolean(STYPE* e1, STYPE* e2, bool is_relop=false);
     explicit Boolean(STYPE* e);
     Type* type() const override;
 };
 
-class String : public Exp{
-    string val;
+class String: public STYPE{
 public:
-    explicit String(string val) : val(val){};
-    Type* type() const override;
+    explicit String(string val){};
+    Type* type() const;
 };
 
 
@@ -112,7 +113,16 @@ class Variable : public  STYPE{
 public:
     Type* type;
     Id* id;
-    Variable(STYPE* type, STYPE* id): type(dynamic_cast<Type *>(type)), id(dynamic_cast<Id *>(id)){};
+    Register* reg;
+    Exp* exp;
+    Variable(STYPE *type, STYPE *id, bool to_reg=false, STYPE* exp=nullptr) : type(dynamic_cast<Type *>(type)),
+                                                          id(dynamic_cast<Id *>(id)),
+                                                          reg(nullptr),
+                                                          exp(dynamic_cast<Exp *>(exp)){
+        if(to_reg) {
+            reg = RegisterManager::instance().alloc();
+        }
+    }
 };
 
 struct ExpType{
@@ -167,59 +177,6 @@ struct Arg{
     void print() const;
 };
 
-class SymbolTable{
-    vector<vector<Arg>> tables_stack;
-    vector<int> offsets_stack;
-    vector<Arg> funcs;
-    Type* cur_return;
-    int in_while;
-    bool in_switch;
-    static SymbolTable* singleton_;
-    SymbolTable();;
-
-public:
-    ~SymbolTable(){
-        print_funcs();
-    }
-    void print_funcs() const;
-    void operator=(const SymbolTable &) = delete;
-    static SymbolTable *GetInstance();
-    void push();
-
-    void push_ret(STYPE* rt);
-
-    void push_while(STYPE* rt);
-
-    void pop();
-
-    void pop_while();
-
-    void enter_switch();
-
-    void exit_switch(){
-        in_switch=false;
-    }
-
-    void add_Func(STYPE* f);
-    void add_Func(Variable* f);
-
-    void add_var(Variable* v, int offset);
-    void add_var(STYPE* v);
-
-    Type* get_id_type(const Id* id) const;
-
-    bool contain_var(const string& name) const;
-
-    Func* get_func_type(const Id* id) const;
-
-    bool contain_func(const string& name) const;
-
-    void assign(STYPE* id_st, STYPE* exp_st);
-
-    void check_return(STYPE* t);
-
-    void check_while(STYPE* t) const;
-};
 
 
 class Call : public Exp{
@@ -228,3 +185,5 @@ public:
     explicit Call(STYPE* id_st, STYPE* el_st=new ExpList());
     Type* type() const override;
 };
+
+#endif //HW5_Semantic_H

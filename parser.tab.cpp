@@ -71,6 +71,8 @@
 
 
    #include "semantics.hpp"
+   #include "SymbolTable.hpp"
+   #include "RegisterManager.hpp"
    #include "hw3_output.hpp"
    extern int yylineno;
    int yylex(void);
@@ -78,7 +80,7 @@
    void yyerror(const char*);
 
 
-#line 82 "parser.tab.cpp"
+#line 84 "parser.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -553,13 +555,13 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    28,    28,    28,    30,    31,    33,    33,    35,    36,
-      38,    39,    41,    42,    44,    46,    47,    49,    50,    51,
-      52,    53,    54,    55,    56,    57,    58,    58,    58,    59,
-      60,    61,    61,    61,    61,    63,    63,    65,    65,    67,
-      68,    70,    71,    73,    74,    75,    77,    78,    79,    80,
-      81,    82,    83,    84,    85,    86,    87,    88,    89,    90,
-      91,    93,    94,    95,    97
+       0,    30,    30,    30,    32,    33,    35,    35,    37,    38,
+      40,    41,    43,    44,    46,    48,    49,    51,    52,    53,
+      54,    55,    56,    57,    58,    59,    60,    60,    60,    61,
+      62,    63,    63,    63,    63,    65,    65,    67,    67,    69,
+      70,    72,    73,    75,    76,    77,    79,    80,    81,    82,
+      83,    84,    85,    86,    87,    88,    89,    90,    91,    92,
+      93,    95,    96,    97,    99
 };
 #endif
 
@@ -1224,355 +1226,355 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* $@1: %empty  */
-#line 28 "parser.ypp"
+#line 30 "parser.ypp"
           {SymbolTable::GetInstance();}
-#line 1230 "parser.tab.cpp"
+#line 1232 "parser.tab.cpp"
     break;
 
   case 4: /* Funcs: %empty  */
-#line 30 "parser.ypp"
+#line 32 "parser.ypp"
         {}
-#line 1236 "parser.tab.cpp"
+#line 1238 "parser.tab.cpp"
     break;
 
   case 6: /* $@2: %empty  */
-#line 33 "parser.ypp"
+#line 35 "parser.ypp"
                                      {SymbolTable::GetInstance()->push_ret(yyvsp[-3]); SymbolTable::GetInstance()->add_Func(new Variable(new Func(yyvsp[-3],yyvsp[0]),yyvsp[-2]));}
-#line 1242 "parser.tab.cpp"
+#line 1244 "parser.tab.cpp"
     break;
 
   case 7: /* FuncDecl: RetType ID LPAREN Formals $@2 RPAREN LBRACE Statements RBRACE  */
-#line 33 "parser.ypp"
+#line 35 "parser.ypp"
                                                                                                                                                                                          {SymbolTable::GetInstance()->pop();}
-#line 1248 "parser.tab.cpp"
+#line 1250 "parser.tab.cpp"
     break;
 
   case 8: /* RetType: Type  */
-#line 35 "parser.ypp"
+#line 37 "parser.ypp"
                {yyval=yyvsp[0];}
-#line 1254 "parser.tab.cpp"
+#line 1256 "parser.tab.cpp"
     break;
 
   case 9: /* RetType: VOID  */
-#line 36 "parser.ypp"
+#line 38 "parser.ypp"
                {yyval=new Void();}
-#line 1260 "parser.tab.cpp"
+#line 1262 "parser.tab.cpp"
     break;
 
   case 10: /* Formals: %empty  */
-#line 38 "parser.ypp"
+#line 40 "parser.ypp"
           {yyval = new FormalsList();}
-#line 1266 "parser.tab.cpp"
+#line 1268 "parser.tab.cpp"
     break;
 
   case 11: /* Formals: FormalsList  */
-#line 39 "parser.ypp"
+#line 41 "parser.ypp"
                       {yyval = yyvsp[0];}
-#line 1272 "parser.tab.cpp"
+#line 1274 "parser.tab.cpp"
     break;
 
   case 12: /* FormalsList: FormalDecl  */
-#line 41 "parser.ypp"
+#line 43 "parser.ypp"
                          {yyval = new FormalsList(); (dynamic_cast<FormalsList *>(yyval))->add(yyvsp[0]);}
-#line 1278 "parser.tab.cpp"
+#line 1280 "parser.tab.cpp"
     break;
 
   case 13: /* FormalsList: FormalDecl COMMA FormalsList  */
-#line 42 "parser.ypp"
+#line 44 "parser.ypp"
                                        {yyval=yyvsp[0];    (dynamic_cast<FormalsList *>(yyval))->add(yyvsp[-2]); }
-#line 1284 "parser.tab.cpp"
+#line 1286 "parser.tab.cpp"
     break;
 
   case 14: /* FormalDecl: Type ID  */
-#line 44 "parser.ypp"
+#line 46 "parser.ypp"
                      {yyval= new Variable(yyvsp[-1], yyvsp[0]);}
-#line 1290 "parser.tab.cpp"
+#line 1292 "parser.tab.cpp"
     break;
 
   case 15: /* Statements: Statement  */
-#line 46 "parser.ypp"
+#line 48 "parser.ypp"
                        {}
-#line 1296 "parser.tab.cpp"
+#line 1298 "parser.tab.cpp"
     break;
 
   case 16: /* Statements: Statements Statement  */
-#line 47 "parser.ypp"
+#line 49 "parser.ypp"
                                {}
-#line 1302 "parser.tab.cpp"
+#line 1304 "parser.tab.cpp"
     break;
 
   case 18: /* Statement: Type ID SC  */
-#line 50 "parser.ypp"
-                     {yyval= new Variable(yyvsp[-2], yyvsp[-1]); SymbolTable::GetInstance()->add_var(yyval); }
-#line 1308 "parser.tab.cpp"
+#line 52 "parser.ypp"
+                     {yyval= new Variable(yyvsp[-2], yyvsp[-1], true); SymbolTable::GetInstance()->add_var(yyval); }
+#line 1310 "parser.tab.cpp"
     break;
 
   case 19: /* Statement: Type ID ASSIGN Exp SC  */
-#line 51 "parser.ypp"
-                                {yyval= new Variable(yyvsp[-4], yyvsp[-3]); SymbolTable::GetInstance()->add_var(yyval); SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1]);}
-#line 1314 "parser.tab.cpp"
+#line 53 "parser.ypp"
+                                {yyval= new Variable(yyvsp[-4], yyvsp[-3], true, yyvsp[-1]); SymbolTable::GetInstance()->add_var(yyval); SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1]);}
+#line 1316 "parser.tab.cpp"
     break;
 
   case 20: /* Statement: ID ASSIGN Exp SC  */
-#line 52 "parser.ypp"
+#line 54 "parser.ypp"
                            {SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1]);}
-#line 1320 "parser.tab.cpp"
+#line 1322 "parser.tab.cpp"
     break;
 
   case 21: /* Statement: Call SC  */
-#line 53 "parser.ypp"
+#line 55 "parser.ypp"
                   {}
-#line 1326 "parser.tab.cpp"
+#line 1328 "parser.tab.cpp"
     break;
 
   case 22: /* Statement: RETURN SC  */
-#line 54 "parser.ypp"
+#line 56 "parser.ypp"
                     {SymbolTable::GetInstance()->check_return(new Void());}
-#line 1332 "parser.tab.cpp"
+#line 1334 "parser.tab.cpp"
     break;
 
   case 23: /* Statement: RETURN Exp SC  */
-#line 55 "parser.ypp"
+#line 57 "parser.ypp"
                         {SymbolTable::GetInstance()->check_return(yyvsp[-1]);}
-#line 1338 "parser.tab.cpp"
+#line 1340 "parser.tab.cpp"
     break;
 
   case 25: /* Statement: IfStatement ELSE Scope  */
-#line 57 "parser.ypp"
+#line 59 "parser.ypp"
                                             {}
-#line 1344 "parser.tab.cpp"
+#line 1346 "parser.tab.cpp"
     break;
 
   case 26: /* $@3: %empty  */
-#line 58 "parser.ypp"
+#line 60 "parser.ypp"
                            {if(!is_bool(yyvsp[0])) output::errorMismatch(yylineno);}
-#line 1350 "parser.tab.cpp"
+#line 1352 "parser.tab.cpp"
     break;
 
   case 27: /* $@4: %empty  */
-#line 58 "parser.ypp"
+#line 60 "parser.ypp"
                                                                                       {SymbolTable::GetInstance()->push_while(new ReturnType("while"));}
-#line 1356 "parser.tab.cpp"
+#line 1358 "parser.tab.cpp"
     break;
 
   case 28: /* Statement: WHILE LPAREN Exp $@3 RPAREN $@4 Statement  */
-#line 58 "parser.ypp"
+#line 60 "parser.ypp"
                                                                                                                                                                    {SymbolTable::GetInstance()->pop_while();}
-#line 1362 "parser.tab.cpp"
+#line 1364 "parser.tab.cpp"
     break;
 
   case 29: /* Statement: BREAK SC  */
-#line 59 "parser.ypp"
+#line 61 "parser.ypp"
                    {SymbolTable::GetInstance()->check_while(new ReturnType("break"));}
-#line 1368 "parser.tab.cpp"
+#line 1370 "parser.tab.cpp"
     break;
 
   case 30: /* Statement: CONTINUE SC  */
-#line 60 "parser.ypp"
+#line 62 "parser.ypp"
                       {SymbolTable::GetInstance()->check_while(new ReturnType("continue"));}
-#line 1374 "parser.tab.cpp"
+#line 1376 "parser.tab.cpp"
     break;
 
   case 31: /* $@5: %empty  */
-#line 61 "parser.ypp"
+#line 63 "parser.ypp"
                             {if(!is_num(yyvsp[0])) output::errorMismatch(yylineno);}
-#line 1380 "parser.tab.cpp"
+#line 1382 "parser.tab.cpp"
     break;
 
   case 32: /* $@6: %empty  */
-#line 61 "parser.ypp"
+#line 63 "parser.ypp"
                                                                                              {SymbolTable::GetInstance()->push(); SymbolTable::GetInstance()->enter_switch();}
-#line 1386 "parser.tab.cpp"
+#line 1388 "parser.tab.cpp"
     break;
 
   case 33: /* $@7: %empty  */
-#line 61 "parser.ypp"
+#line 63 "parser.ypp"
                                                                                                                                                                                         {SymbolTable::GetInstance()->pop(); SymbolTable::GetInstance()->exit_switch();}
-#line 1392 "parser.tab.cpp"
+#line 1394 "parser.tab.cpp"
     break;
 
   case 35: /* $@8: %empty  */
-#line 63 "parser.ypp"
+#line 65 "parser.ypp"
                             {if(!is_bool(yyvsp[0])) output::errorMismatch(yylineno);}
-#line 1398 "parser.tab.cpp"
+#line 1400 "parser.tab.cpp"
     break;
 
   case 36: /* IfStatement: IF LPAREN Exp $@8 RPAREN Scope  */
-#line 63 "parser.ypp"
+#line 65 "parser.ypp"
                                                                                              {}
-#line 1404 "parser.tab.cpp"
+#line 1406 "parser.tab.cpp"
     break;
 
   case 37: /* $@9: %empty  */
-#line 65 "parser.ypp"
+#line 67 "parser.ypp"
         {SymbolTable::GetInstance()->push();}
-#line 1410 "parser.tab.cpp"
+#line 1412 "parser.tab.cpp"
     break;
 
   case 38: /* Scope: $@9 Statements  */
-#line 65 "parser.ypp"
+#line 67 "parser.ypp"
                                                          {SymbolTable::GetInstance()->pop();}
-#line 1416 "parser.tab.cpp"
+#line 1418 "parser.tab.cpp"
     break;
 
   case 39: /* Call: ID LPAREN ExpList RPAREN  */
-#line 67 "parser.ypp"
+#line 69 "parser.ypp"
                                 {yyval=new Call(yyvsp[-3], yyvsp[-1]);}
-#line 1422 "parser.tab.cpp"
+#line 1424 "parser.tab.cpp"
     break;
 
   case 40: /* Call: ID LPAREN RPAREN  */
-#line 68 "parser.ypp"
+#line 70 "parser.ypp"
                            {yyval=new Call(yyvsp[-2]);}
-#line 1428 "parser.tab.cpp"
+#line 1430 "parser.tab.cpp"
     break;
 
   case 41: /* ExpList: Exp  */
-#line 70 "parser.ypp"
+#line 72 "parser.ypp"
               {yyval = new ExpList(); (dynamic_cast<ExpList *>(yyval))->add(yyvsp[0]);}
-#line 1434 "parser.tab.cpp"
+#line 1436 "parser.tab.cpp"
     break;
 
   case 42: /* ExpList: Exp COMMA ExpList  */
-#line 71 "parser.ypp"
+#line 73 "parser.ypp"
                             {yyval=yyvsp[0];    (dynamic_cast<ExpList *>(yyval))->add(yyvsp[-2]); }
-#line 1440 "parser.tab.cpp"
+#line 1442 "parser.tab.cpp"
     break;
 
   case 43: /* Type: INT  */
-#line 73 "parser.ypp"
+#line 75 "parser.ypp"
            {yyval=new Int();}
-#line 1446 "parser.tab.cpp"
+#line 1448 "parser.tab.cpp"
     break;
 
   case 44: /* Type: BYTE  */
-#line 74 "parser.ypp"
+#line 76 "parser.ypp"
                {yyval=new Byte();}
-#line 1452 "parser.tab.cpp"
+#line 1454 "parser.tab.cpp"
     break;
 
   case 45: /* Type: BOOL  */
-#line 75 "parser.ypp"
+#line 77 "parser.ypp"
                {yyval=new Bool();}
-#line 1458 "parser.tab.cpp"
+#line 1460 "parser.tab.cpp"
     break;
 
   case 46: /* Exp: LPAREN Exp RPAREN  */
-#line 77 "parser.ypp"
+#line 79 "parser.ypp"
                         {yyval=yyvsp[-1];}
-#line 1464 "parser.tab.cpp"
+#line 1466 "parser.tab.cpp"
     break;
 
   case 47: /* Exp: Exp MULT_DIV_OP Exp  */
-#line 78 "parser.ypp"
+#line 80 "parser.ypp"
                               {}
-#line 1470 "parser.tab.cpp"
+#line 1472 "parser.tab.cpp"
     break;
 
   case 48: /* Exp: Exp ADD_SUB_OP Exp  */
-#line 79 "parser.ypp"
+#line 81 "parser.ypp"
                              {}
-#line 1476 "parser.tab.cpp"
+#line 1478 "parser.tab.cpp"
     break;
 
   case 49: /* Exp: ID  */
-#line 80 "parser.ypp"
+#line 82 "parser.ypp"
              {}
-#line 1482 "parser.tab.cpp"
+#line 1484 "parser.tab.cpp"
     break;
 
   case 50: /* Exp: Call  */
-#line 81 "parser.ypp"
+#line 83 "parser.ypp"
                {}
-#line 1488 "parser.tab.cpp"
+#line 1490 "parser.tab.cpp"
     break;
 
   case 51: /* Exp: NUM  */
-#line 82 "parser.ypp"
+#line 84 "parser.ypp"
               {}
-#line 1494 "parser.tab.cpp"
+#line 1496 "parser.tab.cpp"
     break;
 
   case 52: /* Exp: NUM B  */
-#line 83 "parser.ypp"
+#line 85 "parser.ypp"
                 {yyval=new NumB(dynamic_cast<Num *>(yyvsp[-1])->val);}
-#line 1500 "parser.tab.cpp"
+#line 1502 "parser.tab.cpp"
     break;
 
   case 53: /* Exp: STRING  */
-#line 84 "parser.ypp"
+#line 86 "parser.ypp"
                  {}
-#line 1506 "parser.tab.cpp"
+#line 1508 "parser.tab.cpp"
     break;
 
   case 54: /* Exp: TRUE  */
-#line 85 "parser.ypp"
-               {yyval=new Boolean();}
-#line 1512 "parser.tab.cpp"
+#line 87 "parser.ypp"
+               {yyval=new Boolean(true);}
+#line 1514 "parser.tab.cpp"
     break;
 
   case 55: /* Exp: FALSE  */
-#line 86 "parser.ypp"
-                {yyval=new Boolean();}
-#line 1518 "parser.tab.cpp"
+#line 88 "parser.ypp"
+                {yyval=new Boolean(false);}
+#line 1520 "parser.tab.cpp"
     break;
 
   case 56: /* Exp: NOT Exp  */
-#line 87 "parser.ypp"
+#line 89 "parser.ypp"
                   {yyval=new Boolean(yyvsp[-1]);}
-#line 1524 "parser.tab.cpp"
+#line 1526 "parser.tab.cpp"
     break;
 
   case 57: /* Exp: Exp AND Exp  */
-#line 88 "parser.ypp"
+#line 90 "parser.ypp"
                       {yyval=new Boolean(yyvsp[-2], yyvsp[0]);}
-#line 1530 "parser.tab.cpp"
+#line 1532 "parser.tab.cpp"
     break;
 
   case 58: /* Exp: Exp OR Exp  */
-#line 89 "parser.ypp"
+#line 91 "parser.ypp"
                      {yyval=new Boolean(yyvsp[-2], yyvsp[0]);}
-#line 1536 "parser.tab.cpp"
+#line 1538 "parser.tab.cpp"
     break;
 
   case 59: /* Exp: Exp EQUALITY Exp  */
-#line 90 "parser.ypp"
+#line 92 "parser.ypp"
                            {yyval=new Boolean(yyvsp[-2], yyvsp[0], true);}
-#line 1542 "parser.tab.cpp"
+#line 1544 "parser.tab.cpp"
     break;
 
   case 60: /* Exp: Exp RELOP Exp  */
-#line 91 "parser.ypp"
+#line 93 "parser.ypp"
                         {yyval=new Boolean(yyvsp[-2], yyvsp[0], true);}
-#line 1548 "parser.tab.cpp"
+#line 1550 "parser.tab.cpp"
     break;
 
   case 61: /* CaseList: CaseDecl CaseList  */
-#line 93 "parser.ypp"
+#line 95 "parser.ypp"
                              {}
-#line 1554 "parser.tab.cpp"
+#line 1556 "parser.tab.cpp"
     break;
 
   case 62: /* CaseList: CaseDecl  */
-#line 94 "parser.ypp"
+#line 96 "parser.ypp"
                    {}
-#line 1560 "parser.tab.cpp"
+#line 1562 "parser.tab.cpp"
     break;
 
   case 63: /* CaseList: DEFAULT COLON Statements  */
-#line 95 "parser.ypp"
+#line 97 "parser.ypp"
                                    {}
-#line 1566 "parser.tab.cpp"
+#line 1568 "parser.tab.cpp"
     break;
 
   case 64: /* CaseDecl: CASE NUM COLON Statements  */
-#line 97 "parser.ypp"
+#line 99 "parser.ypp"
                                      {}
-#line 1572 "parser.tab.cpp"
+#line 1574 "parser.tab.cpp"
     break;
 
 
-#line 1576 "parser.tab.cpp"
+#line 1578 "parser.tab.cpp"
 
       default: break;
     }
@@ -1766,7 +1768,7 @@ yyreturn:
   return yyresult;
 }
 
-#line 99 "parser.ypp"
+#line 101 "parser.ypp"
 
 
 
@@ -1779,4 +1781,5 @@ void yyerror(const char*){
 int main(){
     auto p= yyparse();
     SymbolTable::GetInstance()->print_funcs();
-    return p;}
+    return p;
+}
