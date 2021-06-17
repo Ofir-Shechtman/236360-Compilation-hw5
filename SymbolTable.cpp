@@ -131,6 +131,7 @@ Func *SymbolTable::get_func_type(const Id *id) const {
 bool SymbolTable::contain_func(const string &name) const {
     auto id = Id(name);
     auto t = get_func_type(&id);
+
     return t != nullptr;
 }
 

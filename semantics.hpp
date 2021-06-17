@@ -26,6 +26,12 @@ public:
     virtual string name() const =0;
 };
 
+class OP : public STYPE{
+public:
+    string op;
+    explicit OP(const string op):op(op){}
+};
+
 class Exp : public STYPE{
 protected:
     explicit Exp(int val=0):val(val){}
@@ -35,6 +41,9 @@ public:
     virtual Type* type() const = 0;
     virtual int getVal() const;
 };
+
+Exp* binop(STYPE* e1, STYPE* op, STYPE* e2);
+
 
 class Id : public Exp{
     string id_name;
@@ -69,7 +78,7 @@ public:
 class Boolean : public Exp{
 public:
     explicit Boolean(bool val):Exp(val){};
-    Boolean(STYPE* e1, STYPE* e2, bool is_relop=false);
+    Boolean(STYPE* e1, STYPE* op, STYPE* e2, bool is_relop=false);
     explicit Boolean(STYPE* e);
     Type* type() const override;
 };

@@ -1467,13 +1467,13 @@ yyreduce:
 
   case 47: /* Exp: Exp MULT_DIV_OP Exp  */
 #line 80 "parser.ypp"
-                              {}
+                              {yyval= binop(yyvsp[-2], yyvsp[-1], yyvsp[0]);}
 #line 1472 "parser.tab.cpp"
     break;
 
   case 48: /* Exp: Exp ADD_SUB_OP Exp  */
 #line 81 "parser.ypp"
-                             {}
+                             {yyval= binop(yyvsp[-2], yyvsp[-1], yyvsp[0]);}
 #line 1478 "parser.tab.cpp"
     break;
 
@@ -1527,25 +1527,25 @@ yyreduce:
 
   case 57: /* Exp: Exp AND Exp  */
 #line 90 "parser.ypp"
-                      {yyval=new Boolean(yyvsp[-2], yyvsp[0]);}
+                      {yyval=new Boolean(yyvsp[-2], yyvsp[-1], yyvsp[0]);}
 #line 1532 "parser.tab.cpp"
     break;
 
   case 58: /* Exp: Exp OR Exp  */
 #line 91 "parser.ypp"
-                     {yyval=new Boolean(yyvsp[-2], yyvsp[0]);}
+                     {yyval=new Boolean(yyvsp[-2], yyvsp[-1], yyvsp[0]);}
 #line 1538 "parser.tab.cpp"
     break;
 
   case 59: /* Exp: Exp EQUALITY Exp  */
 #line 92 "parser.ypp"
-                           {yyval=new Boolean(yyvsp[-2], yyvsp[0], true);}
+                           {yyval=new Boolean(yyvsp[-2], yyvsp[-1], yyvsp[0], true);}
 #line 1544 "parser.tab.cpp"
     break;
 
   case 60: /* Exp: Exp RELOP Exp  */
 #line 93 "parser.ypp"
-                        {yyval=new Boolean(yyvsp[-2], yyvsp[0], true);}
+                        {yyval=new Boolean(yyvsp[-2], yyvsp[-1], yyvsp[0], true);}
 #line 1550 "parser.tab.cpp"
     break;
 

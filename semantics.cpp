@@ -16,7 +16,7 @@ Type *Boolean::type() const {
     return new Bool();
 }
 
-Boolean::Boolean(STYPE *e1, STYPE *e2, bool is_relop) {
+Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
     if(is_relop && is_num(e1) &&  is_num(e2))
         return;
     else if(!is_relop && is_bool(e1) &&  is_bool(e2))
@@ -27,7 +27,7 @@ Boolean::Boolean(STYPE *e1, STYPE *e2, bool is_relop) {
 Boolean::Boolean(STYPE *e) {
     if(is_bool(e)) {
         Exp *b = dynamic_cast<Exp *>(e);
-        val = !b->val;
+        val = !b->getVal();
         return;
     }
     output::errorMismatch(yylineno);
@@ -123,6 +123,39 @@ void Arg::print() const {
 
 int Exp::getVal() const {
     return val;
+}
+
+Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
+    if(!is_num(e1) ||  !is_num(e2))
+        output::errorMismatch(yylineno);
+    auto ev1 = dynamic_cast<Exp*>(e1);
+    auto ev2 = dynamic_cast<Exp*>(e2);
+    if(ev1->type()->name()!=ev2->type()->name())
+        output::errorMismatch(yylineno);
+    Exp *exp = nullptr;
+    if(ev1->type()->name()=="INT")
+        exp = new Num("0");
+    else if(ev1->type()->name()=="BYTE")
+        exp = new NumB("0");
+    int v1 = ev1->getVal();
+    int v2 = ev2->getVal();
+    OP* binop = dynamic_cast<OP*>(op);
+    if(!op)
+        output::errorMismatch(yylineno);
+    if(binop->op=="/"){
+        if(v2==0)
+            output::errorDivisionByZero();
+        exp->val=v1/v2;
+    }
+    else if(binop->op=="*")
+        exp->val=v1*v2;
+    else if(binop->op=="+")
+        exp->val=v1+v2;
+    else if(binop->op=="-")
+        exp->val=v1-v2;
+    else
+        output::errorMismatch(yylineno);
+    return exp;
 }
 
 int Id::getVal() const {

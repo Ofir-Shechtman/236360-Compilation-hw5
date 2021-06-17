@@ -96,3 +96,9 @@ void output::errorByteTooLarge(int lineno, const string& value) {
     cout << "line " << lineno << ": byte value " << value << " out of range" << endl;
     exit(1);
 }
+
+void output::errorDivisionByZero() {
+    cout << "Error division by zero" << endl;
+    exit(1);
+}
+//Error division by zero"

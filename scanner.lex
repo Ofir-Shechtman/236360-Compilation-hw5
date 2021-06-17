@@ -34,8 +34,8 @@ continue {return CONTINUE;}
 switch {return SWITCH;}
 case {return CASE;}
 default {return DEFAULT;}
->=|<=|<|> {return RELOP;}
-!=|== {return EQUALITY;}
+>=|<=|<|> {yylval=new OP(yytext); return RELOP;}
+!=|== {yylval=new OP(yytext); return EQUALITY;}
 : {return COLON;}
 ; {return SC;}
 , {return COMMA;}
@@ -45,8 +45,8 @@ default {return DEFAULT;}
 \} {return RBRACE;}
 = {return ASSIGN;}
 b {return B;}
-[\*\/] {return MULT_DIV_OP;}
-[\+\-] {return ADD_SUB_OP;}
+[\*\/] {yylval=new OP(yytext); return MULT_DIV_OP;}
+[\+\-] {yylval=new OP(yytext); return ADD_SUB_OP;}
 0|[1-9]{DIGIT}* {yylval=new Num(yytext); return NUM;}
 {ID} {yylval=new Id(yytext); return ID;}
 (\/\/)[^\n\r\r\n]* {;}

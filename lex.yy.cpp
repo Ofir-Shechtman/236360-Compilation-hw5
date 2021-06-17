@@ -924,12 +924,12 @@ YY_RULE_SETUP
 case 19:
 YY_RULE_SETUP
 #line 37 "scanner.lex"
-{return RELOP;}
+{yylval=new OP(yytext); return RELOP;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
 #line 38 "scanner.lex"
-{return EQUALITY;}
+{yylval=new OP(yytext); return EQUALITY;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
@@ -979,12 +979,12 @@ YY_RULE_SETUP
 case 30:
 YY_RULE_SETUP
 #line 48 "scanner.lex"
-{return MULT_DIV_OP;}
+{yylval=new OP(yytext); return MULT_DIV_OP;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
 #line 49 "scanner.lex"
-{return ADD_SUB_OP;}
+{yylval=new OP(yytext); return ADD_SUB_OP;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
