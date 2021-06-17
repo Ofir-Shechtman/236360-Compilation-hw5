@@ -1521,7 +1521,7 @@ yyreduce:
 
   case 56: /* Exp: NOT Exp  */
 #line 89 "parser.ypp"
-                  {yyval=new Boolean(yyvsp[-1]);}
+                  {yyval=new Boolean(yyvsp[0]);}
 #line 1526 "parser.tab.cpp"
     break;
 

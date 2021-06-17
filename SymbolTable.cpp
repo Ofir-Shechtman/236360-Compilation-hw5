@@ -108,12 +108,9 @@ void SymbolTable::add_var(STYPE *v) {
 }
 
 Type *SymbolTable::get_id_type(const Id *id) const {
-    for(const auto& i:tables_stack){
-        for(auto j : i){
-            if(j.var->id->name()==id->name())
-                return j.var->type;
-        }
-    }
+    auto var = get_id_variable(id);
+    if(var)
+        return var->type;
     return nullptr;
 }
 
@@ -176,6 +173,23 @@ void SymbolTable::check_while(STYPE *t) const {
         else if(ret->name()=="continue")
             output::errorUnexpectedContinue(yylineno);
     }
+}
+
+Variable *SymbolTable::get_id_variable(const Id *id) const {
+    for(const auto& i:tables_stack){
+        for(auto j : i){
+            if(j.var->id->name()==id->name())
+                return j.var;
+        }
+    }
+    return nullptr;
+}
+
+Exp* SymbolTable::get_id_val(const Id *id) const {
+    auto var = get_id_variable(id);
+    if(var)
+        return var->exp;
+    return nullptr;
 }
 
 Type *Id::type() const {

@@ -16,6 +16,7 @@ class SymbolTable{
     bool in_switch;
     static SymbolTable* singleton_;
     SymbolTable();;
+    Variable* get_id_variable(const Id* id) const;
 
 public:
     ~SymbolTable(){
@@ -47,6 +48,8 @@ public:
     void add_var(STYPE* v);
 
     Type* get_id_type(const Id* id) const;
+
+    Exp* get_id_val(const Id* id) const;
 
     bool contain_var(const string& name) const;
 

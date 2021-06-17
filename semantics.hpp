@@ -33,6 +33,7 @@ protected:
 public:
     int val;
     virtual Type* type() const = 0;
+    virtual int getVal() const;
 };
 
 class Id : public Exp{
@@ -41,6 +42,7 @@ public:
     explicit Id(const string val) : id_name(val){};
     string name() const{return id_name;}
     Type* type() const override;
+    int getVal() const override;
 };
 bool is_type(STYPE* e, string type) ;
 

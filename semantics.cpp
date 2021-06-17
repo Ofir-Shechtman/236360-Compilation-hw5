@@ -25,8 +25,11 @@ Boolean::Boolean(STYPE *e1, STYPE *e2, bool is_relop) {
 }
 
 Boolean::Boolean(STYPE *e) {
-    if(is_bool(e))
+    if(is_bool(e)) {
+        Exp *b = dynamic_cast<Exp *>(e);
+        val = !b->val;
         return;
+    }
     output::errorMismatch(yylineno);
 }
 
@@ -118,4 +121,15 @@ void Arg::print() const {
     }
 }
 
+int Exp::getVal() const {
+    return val;
+}
+
+int Id::getVal() const {
+    auto var = SymbolTable::GetInstance()->get_id_val(this);
+    if (var->val){
+        return var->val;
+    }
+    return -1;
+}
 
