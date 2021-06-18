@@ -1,6 +1,7 @@
 #include "semantics.hpp"
 #include "SymbolTable.hpp"
-
+#include "bp.hpp"
+#include "llvm_funcs.hpp"
 
 
 Type *Num::type() const {
@@ -17,58 +18,63 @@ Type *Boolean::type() const {
 }
 
 Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
-    if(is_relop && is_num(e1) &&  is_num(e2)){
-        auto ev1 = dynamic_cast<Exp*>(e1);
-        auto ev2 = dynamic_cast<Exp*>(e2);
-        int v1 = ev1->getVal();
-        int v2 = ev2->getVal();
+    auto ev1 = dynamic_cast<Exp*>(e1);
+    auto ev2 = dynamic_cast<Exp*>(e2);
+    if(is_relop && is_num(ev1) &&  is_num(ev2)){
+        //int v1 = ev1->getVal();
+        //int v2 = ev2->getVal();
         OP* my_op = dynamic_cast<OP*>(op);
         if(!my_op)
             output::errorMismatch(yylineno);
-        if(my_op->op=="=="){
-            val=(v1==v2);
-        }
+        string arith = "icmp ";
+        if(my_op->op=="==")
+            arith +="eq";
+            //val=(v1==v2);
         else if(my_op->op=="!=")
-            val=(v1!=v2);
+            arith +="ne";
+            //val=(v1!=v2);
         else if(my_op->op=="<=")
-            val=(v1<=v2);
+            arith +="sle";
+            //val=(v1<=v2);
         else if(my_op->op==">=")
-            val=(v1>=v2);
+            arith +="sge";
+            //val=(v1>=v2);
         else if(my_op->op=="<")
-            val=(v1<v2);
+            arith +="slt";
+            //val=(v1<v2);
         else if(my_op->op==">")
-            val=(v1>v2);
+            arith +="sgt";
+            //val=(v1>v2);
         else
             output::errorMismatch(yylineno);
-        return;
+        string l=ev1->get(), r=ev2->get();
+        reg=RegisterManager::instance().alloc(1);
+        CodeBuffer::instance().emit(get_binop(reg->name(), arith, l, r));
     }
-    else if(!is_relop && is_bool(e1) && is_bool(e2)){
-        auto ev1 = dynamic_cast<Exp*>(e1);
-        auto ev2 = dynamic_cast<Exp*>(e2);
-        int v1 = ev1->getVal();
-        int v2 = ev2->getVal();
+    else if(!is_relop && is_bool(ev1) && is_bool(ev2)){
+        //int v1 = ev1->getVal();
+        //int v2 = ev2->getVal();
         OP* my_op = dynamic_cast<OP*>(op);
         if(!my_op)
             output::errorMismatch(yylineno);
-        if(my_op->op=="and"){
-            val=(v1&&v2);
-        }
-        else if(my_op->op=="or")
-            val=(v1||v2);
-        else
-            output::errorMismatch(yylineno);
-        return;
+        reg=RegisterManager::instance().alloc(1);
+        CodeBuffer::instance().emit(get_binop(reg->name(), my_op->op, ev1->get(), ev2->get()));
     }
-    output::errorMismatch(yylineno);
+    else
+        output::errorMismatch(yylineno);
 }
 
 Boolean::Boolean(STYPE *e) {
     if(is_bool(e)) {
         Exp *b = dynamic_cast<Exp *>(e);
-        val = !b->getVal();
+        //val = !b->getVal();
         return;
     }
     output::errorMismatch(yylineno);
+}
+
+string Boolean::get() const {
+    return "i1 "+ to_string(val);
 }
 
 Type *String::type() const {
@@ -153,14 +159,22 @@ const vector<Variable *> &Func::args() const {
 
 void Arg::print() const {
     output::printID(var->id->name(), offset, var->type->name());
-    if (var->reg) {
-        int val = var->exp != nullptr ? var->exp->val : -1;
-        cout << var->reg->name() << " = " << val << endl;
+    if(offset<0){
+        cout << "%" << offset*-1-1 << endl;
     }
+    else {
+        int val = var->exp->val;
+        cout << "%ptr" << offset << " = " << val << endl;
+    }
+
 }
 
-int Exp::getVal() const {
-    return val;
+string Arg::ptr_name() const {
+    return "%ptr" + to_string(offset);
+}
+
+string Exp::get() const {
+    return "i32 "+ to_string(val);
 }
 
 Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
@@ -175,32 +189,60 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
         exp = new Num("0");
     else if(ev1->type()->name()=="BYTE")
         exp = new NumB("0");
-    int v1 = ev1->getVal();
-    int v2 = ev2->getVal();
     OP* binop = dynamic_cast<OP*>(op);
     if(!binop)
         output::errorMismatch(yylineno);
+    string arith;
     if(binop->op=="/"){
-        if(v2==0)
-            output::errorDivisionByZero();
-        exp->val=v1/v2;
+//        if(v2==0) {
+//            output::errorDivisionByZero();
+//        }
+        //exp->val=v1/v2;
+        arith = "sdiv";
     }
-    else if(binop->op=="*")
-        exp->val=v1*v2;
-    else if(binop->op=="+")
-        exp->val=v1+v2;
-    else if(binop->op=="-")
-        exp->val=v1-v2;
-    else
+    else if(binop->op=="*") {
+        //exp->val=v1*v2;
+        arith = "mul";
+    }
+    else if(binop->op=="+") {
+        //exp->val=v1+v2;
+        arith = "add";
+    }
+    else if(binop->op=="-") {
+        //exp->val=v1-v2;
+        arith = "sub";
+    }
+    else {
         output::errorMismatch(yylineno);
+    }
+    exp->reg=RegisterManager::instance().alloc(32);
+    CodeBuffer::instance().emit(get_binop(exp->reg->name(), arith, ev1->get(), ev2->get()));
     return exp;
 }
 
-int Id::getVal() const {
-    auto var = SymbolTable::GetInstance()->get_id_val(this);
-    if (var->val){
-        return var->val;
+string Id::get() const {
+    auto arg = SymbolTable::GetInstance()->get_id_arg(this);
+    if (!arg)
+        output::errorUndef(yylineno, this->name());
+    if (!arg->var->exp->reg){
+        int bit = arg->var->type->name()=="BOOL" ? 1 : 32;
+        auto& reg = arg->var->exp->reg;
+        reg=RegisterManager::instance().alloc(bit);
+        string ptr_name = "%ptr" + to_string(arg->offset);
+        CodeBuffer::instance().emit(load(reg->name(), reg->type(), ptr_name));
     }
-    output::errorUndef(yylineno, this->name());
+    return arg->var->exp->reg->name();
 }
+Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type *>(type)),
+                                                         id(dynamic_cast<Id *>(id)),
+                                                         exp(dynamic_cast<Exp *>(exp)){
+    if(!exp){
+        if(this->type->name()=="INT")
+            this->exp = new Num("0");
+        else if(this->type->name()=="BYTE")
+            this->exp = new NumB("0");
+        else if(this->type->name()=="BOOL")
+            this->exp = new Boolean(false);
+    }
 
+}

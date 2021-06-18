@@ -34,12 +34,13 @@ public:
 
 class Exp : public STYPE{
 protected:
-    explicit Exp(int val=0):val(val){}
+    explicit Exp(int val=0):val(val), reg(nullptr){}
     virtual ~Exp()=default;
 public:
     int val;
+    Register* reg;
     virtual Type* type() const = 0;
-    virtual int getVal() const;
+    virtual string get() const;
 };
 
 Exp* binop(STYPE* e1, STYPE* op, STYPE* e2);
@@ -51,7 +52,7 @@ public:
     explicit Id(const string val) : id_name(val){};
     string name() const{return id_name;}
     Type* type() const override;
-    int getVal() const override;
+    string get() const override;
 };
 bool is_type(STYPE* e, string type) ;
 
@@ -81,6 +82,7 @@ public:
     Boolean(STYPE* e1, STYPE* op, STYPE* e2, bool is_relop=false);
     explicit Boolean(STYPE* e);
     Type* type() const override;
+    string get() const override;
 };
 
 class String: public STYPE{
@@ -124,16 +126,8 @@ class Variable : public  STYPE{
 public:
     Type* type;
     Id* id;
-    Register* reg;
     Exp* exp;
-    Variable(STYPE *type, STYPE *id, bool to_reg=false, STYPE* exp=nullptr) : type(dynamic_cast<Type *>(type)),
-                                                          id(dynamic_cast<Id *>(id)),
-                                                          reg(nullptr),
-                                                          exp(dynamic_cast<Exp *>(exp)){
-        if(to_reg) {
-            reg = RegisterManager::instance().alloc();
-        }
-    }
+    Variable(STYPE *type, STYPE *id, STYPE* exp=nullptr);
 };
 
 struct ExpType{
@@ -186,6 +180,7 @@ struct Arg{
     //Arg(STYPE* v, int offset): var((Variable*)v), offset(offset){};
     Arg(Variable* v, int offset):var(v), offset(offset){};
     void print() const;
+    string ptr_name() const;
 };
 
 

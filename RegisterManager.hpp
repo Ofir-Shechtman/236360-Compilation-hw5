@@ -6,8 +6,10 @@ using namespace std;
 class Register{
 public:
     unsigned int id;
+    int bit_num;
+    string type() const;
     string name() const;
-    explicit Register(unsigned int id):id(id){}
+    explicit Register(unsigned int id, int bit_num):id(id), bit_num(bit_num){}
 };
 
 class RegisterManager {
@@ -17,7 +19,8 @@ public:
     RegisterManager(RegisterManager const &) = delete;
     void operator=(RegisterManager const &) = delete;
     static RegisterManager &instance();
-    Register* alloc();
+    Register* alloc(int bit_num);
+    void reset();
 
 };
 
