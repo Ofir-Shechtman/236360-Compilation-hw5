@@ -20,9 +20,9 @@ void {return VOID;}
 int {return INT;}
 byte {return BYTE;}
 bool {return BOOL;}
-and {return AND;}
-or {return OR;}
-not {return NOT;}
+and {yylval=new OP(yytext); return AND;}
+or {yylval=new OP(yytext); return OR;}
+not { return NOT;}
 true {return TRUE;}
 false {return FALSE;}
 return {return RETURN;}

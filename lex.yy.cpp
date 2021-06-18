@@ -854,17 +854,17 @@ YY_RULE_SETUP
 case 5:
 YY_RULE_SETUP
 #line 23 "scanner.lex"
-{return AND;}
+{yylval=new OP(yytext); return AND;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
 #line 24 "scanner.lex"
-{return OR;}
+{yylval=new OP(yytext); return OR;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
 #line 25 "scanner.lex"
-{return NOT;}
+{ return NOT;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP

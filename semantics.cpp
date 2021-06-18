@@ -17,10 +17,48 @@ Type *Boolean::type() const {
 }
 
 Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
-    if(is_relop && is_num(e1) &&  is_num(e2))
+    if(is_relop && is_num(e1) &&  is_num(e2)){
+        auto ev1 = dynamic_cast<Exp*>(e1);
+        auto ev2 = dynamic_cast<Exp*>(e2);
+        int v1 = ev1->getVal();
+        int v2 = ev2->getVal();
+        OP* my_op = dynamic_cast<OP*>(op);
+        if(!my_op)
+            output::errorMismatch(yylineno);
+        if(my_op->op=="=="){
+            val=(v1==v2);
+        }
+        else if(my_op->op=="!=")
+            val=(v1!=v2);
+        else if(my_op->op=="<=")
+            val=(v1<=v2);
+        else if(my_op->op==">=")
+            val=(v1>=v2);
+        else if(my_op->op=="<")
+            val=(v1<v2);
+        else if(my_op->op==">")
+            val=(v1>v2);
+        else
+            output::errorMismatch(yylineno);
         return;
-    else if(!is_relop && is_bool(e1) &&  is_bool(e2))
+    }
+    else if(!is_relop && is_bool(e1) && is_bool(e2)){
+        auto ev1 = dynamic_cast<Exp*>(e1);
+        auto ev2 = dynamic_cast<Exp*>(e2);
+        int v1 = ev1->getVal();
+        int v2 = ev2->getVal();
+        OP* my_op = dynamic_cast<OP*>(op);
+        if(!my_op)
+            output::errorMismatch(yylineno);
+        if(my_op->op=="and"){
+            val=(v1&&v2);
+        }
+        else if(my_op->op=="or")
+            val=(v1||v2);
+        else
+            output::errorMismatch(yylineno);
         return;
+    }
     output::errorMismatch(yylineno);
 }
 
@@ -140,7 +178,7 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     int v1 = ev1->getVal();
     int v2 = ev2->getVal();
     OP* binop = dynamic_cast<OP*>(op);
-    if(!op)
+    if(!binop)
         output::errorMismatch(yylineno);
     if(binop->op=="/"){
         if(v2==0)
@@ -163,6 +201,6 @@ int Id::getVal() const {
     if (var->val){
         return var->val;
     }
-    return -1;
+    output::errorUndef(yylineno, this->name());
 }
 
