@@ -4,7 +4,7 @@
    #include "SymbolTable.hpp"
    #include "RegisterManager.hpp"
    #include "hw3_output.hpp"
-   #include "bp.hpp"
+   #include "trick.hpp"
    extern int yylineno;
    int yylex(void);
    int yyparse();
@@ -46,26 +46,32 @@ FormalsList : FormalDecl {$$ = new FormalsList(); (dynamic_cast<FormalsList *>($
 
 FormalDecl : Type ID {$$= new Variable($1, $2);}
 
-Statements : Statement {}
-        | Statements Statement {}
+Statements : Statement {$$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($1));}
+        | Statements Statement {$$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($1)); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($2));}
 
-Statement : LBRACE Scope RBRACE
-        | Type ID SC {$$= new Variable($1, $2); SymbolTable::GetInstance()->add_var($$); }
-        | Type ID ASSIGN Exp SC {$$= new Variable($1, $2, $4); SymbolTable::GetInstance()->add_var($$); SymbolTable::GetInstance()->assign($2,$4, true);}
-        | ID ASSIGN Exp SC {SymbolTable::GetInstance()->assign($1,$3, false);}
-        | Call SC {}
-        | RETURN SC {SymbolTable::GetInstance()->check_return(new Void());}
-        | RETURN Exp SC {SymbolTable::GetInstance()->check_return($2);}
-        | IfStatement %prec IF
-        | IfStatement ELSE Scope %prec ELSE {}
-        | WHILE LPAREN Exp {if(!is_bool($3)) output::errorMismatch(yylineno);} RPAREN {SymbolTable::GetInstance()->push_while(new ReturnType("while"));} Statement {SymbolTable::GetInstance()->pop_while();}
-        | BREAK SC {SymbolTable::GetInstance()->check_while(new ReturnType("break"));}
-        | CONTINUE SC {SymbolTable::GetInstance()->check_while(new ReturnType("continue"));}
-        | SWITCH LPAREN Exp {if(!is_num($3)) output::errorMismatch(yylineno);} RPAREN LBRACE {SymbolTable::GetInstance()->push(); SymbolTable::GetInstance()->enter_switch();} CaseList {SymbolTable::GetInstance()->pop(); SymbolTable::GetInstance()->exit_switch();} RBRACE
+Statement : LBRACE Scope RBRACE {$$ = new Statement();}
+        | Type ID SC {SymbolTable::GetInstance()->add_var(new Variable($1, $2)); } {$$ = new Statement();}
+        | Type ID ASSIGN Exp SC {SymbolTable::GetInstance()->add_var(new Variable($1, $2, $4)); SymbolTable::GetInstance()->assign($2,$4, true);} {$$ = new Statement();}
+        | ID ASSIGN Exp SC {SymbolTable::GetInstance()->assign($1,$3, false);} {$$ = new Statement();}
+        | Call SC {} {$$ = new Statement();}
+        | RETURN SC {SymbolTable::GetInstance()->check_return(new Void());} {$$ = new Statement();}
+        | RETURN Exp SC {SymbolTable::GetInstance()->check_return($2);} {$$ = new Statement();}
+        | IfStatement %prec IF {$$ = new Statement(dynamic_cast<IfStatement *>($1));}
+        | IfStatement N ScopeM %prec ELSE {$$ = new Statement(dynamic_cast<IfStatement *>($1), dynamic_cast<MarkerN *>($2), dynamic_cast<Scope *>($3));}
+        | WHILE LPAREN Exp {if(!is_bool($3)) output::errorMismatch(yylineno);} RPAREN {SymbolTable::GetInstance()->push_while(new ReturnType("while"));} Statement {SymbolTable::GetInstance()->pop_while();} {$$ = new Statement();}
+        | BREAK SC {SymbolTable::GetInstance()->check_while(new ReturnType("break"));} {$$ = new Statement();}
+        | CONTINUE SC {SymbolTable::GetInstance()->check_while(new ReturnType("continue"));} {$$ = new Statement();}
+        | SWITCH LPAREN Exp {if(!is_num($3)) output::errorMismatch(yylineno);} RPAREN LBRACE {SymbolTable::GetInstance()->push(); SymbolTable::GetInstance()->enter_switch();} CaseList {SymbolTable::GetInstance()->pop(); SymbolTable::GetInstance()->exit_switch();} RBRACE {$$ = new Statement();}
 
-IfStatement : IF LPAREN Exp {if(!is_bool($3)) output::errorMismatch(yylineno);} RPAREN Scope {}
+IfStatement : IF LPAREN Exp {if(!is_bool($3)) output::errorMismatch(yylineno);} RPAREN ScopeM {$$ = new IfStatement($3, $6);}
+
+ScopeM : {SymbolTable::GetInstance()->push();} M Statement {SymbolTable::GetInstance()->pop(); $$=new Scope($2, $3);}
 
 Scope : {SymbolTable::GetInstance()->push();} Statements {SymbolTable::GetInstance()->pop();}
+
+M : {$$=new MarkerM();}
+
+N : ELSE {$$=new MarkerN();}
 
 Call : ID LPAREN ExpList RPAREN {$$=new Call($1, $3);}
         | ID LPAREN RPAREN {$$=new Call($1);}

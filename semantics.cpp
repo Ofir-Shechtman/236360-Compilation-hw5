@@ -50,10 +50,11 @@ Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
         string l=ev1->get(), r=ev2->get();
         reg=RegisterManager::instance().alloc(1);
         CodeBuffer::instance().emit(get_binop(reg->name(), arith, l, r));
+        auto nextInstr = CodeBuffer::instance().emit(br_cond(reg->full_name(), "@", "@"));
+        data.add(nextInstr, FIRST, nextInstr, SECOND);
+
     }
     else if(!is_relop && is_bool(ev1) && is_bool(ev2)){
-        //int v1 = ev1->getVal();
-        //int v2 = ev2->getVal();
         OP* my_op = dynamic_cast<OP*>(op);
         if(!my_op)
             output::errorMismatch(yylineno);
@@ -66,16 +67,20 @@ Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
 
 Boolean::Boolean(STYPE *e) {
     if(is_bool(e)) {
-        Exp *b = dynamic_cast<Exp *>(e);
-        //val = !b->getVal();
-        return;
+        auto temp = data.falseList;
+        data.falseList = data.trueList;
+        data.trueList = temp;
+
     }
     output::errorMismatch(yylineno);
 }
 
-string Boolean::get() const {
-    return "i1 "+ to_string(val);
+Boolean::Boolean(bool val) :Exp(val), data(){
+    auto nextInstr = CodeBuffer::instance().emit(br_uncond("@"));
+    data.add(nextInstr, FIRST, val);
+
 }
+
 
 Type *String::type() const {
     return new TypeString();
@@ -174,7 +179,7 @@ string Arg::ptr_name() const {
 }
 
 string Exp::get() const {
-    return "i32 "+ to_string(val);
+    return type()->reg_type()+ " "+ to_string(val);
 }
 
 Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
@@ -231,7 +236,7 @@ string Id::get() const {
         string ptr_name = "%ptr" + to_string(arg->offset);
         CodeBuffer::instance().emit(load(reg->name(), reg->type(), ptr_name));
     }
-    return arg->var->exp->reg->name();
+    return arg->var->exp->reg->full_name();
 }
 Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type *>(type)),
                                                          id(dynamic_cast<Id *>(id)),

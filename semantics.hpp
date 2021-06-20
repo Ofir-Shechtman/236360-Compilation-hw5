@@ -5,6 +5,7 @@
 #include "RegisterManager.hpp"
 #include <iostream>
 #include <vector>
+#include "bp.hpp"
 
 using namespace std;
 
@@ -24,6 +25,7 @@ protected:
     virtual ~Type()=default;
 public:
     virtual string name() const =0;
+    virtual string reg_type() const =0;
 };
 
 class OP : public STYPE{
@@ -78,11 +80,11 @@ public:
 
 class Boolean : public Exp{
 public:
-    explicit Boolean(bool val):Exp(val){};
+    BooleanE data;
+    explicit Boolean(bool val);;
     Boolean(STYPE* e1, STYPE* op, STYPE* e2, bool is_relop=false);
     explicit Boolean(STYPE* e);
     Type* type() const override;
-    string get() const override;
 };
 
 class String: public STYPE{
@@ -96,30 +98,35 @@ class Int : public Type{
 public:
     Int()=default;
     string name() const override {return "INT";};
+    string reg_type() const  override {return "i32";}
 };
 
 class Byte : public Type{
 public:
     Byte()=default;
     string name() const override {return "BYTE";};
+    string reg_type() const  override {return "i32";}
 };
 
 class Void : public Type{
 public:
     Void()=default;
     string name() const override {return "VOID";};
+    string reg_type() const  override {return "void";}
 };
 
 class TypeString : public Type{
 public:
     TypeString()=default;
     string name() const override {return "STRING";};
+    string reg_type() const  override {return "not supported";}
 };
 
 class Bool : public Type{
 public:
     Bool()=default;
     string name() const override {return "BOOL";};
+    string reg_type() const  override {return "i1";}
 };
 
 class Variable : public  STYPE{
@@ -162,6 +169,7 @@ public:
     vector<string> type_list() const;
     string name() const override;
     const vector<Variable*>& args() const;
+    string reg_type() const  override {return "not supported";}
 };
 
 class ReturnType : public Type{
@@ -171,7 +179,9 @@ public:
     string name() const override{
         return t;
     }
+    string reg_type() const  override {return "not supported";}
 };
+
 
 
 struct Arg{

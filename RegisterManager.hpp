@@ -9,6 +9,7 @@ public:
     int bit_num;
     string type() const;
     string name() const;
+    string full_name() const;
     explicit Register(unsigned int id, int bit_num):id(id), bit_num(bit_num){}
 };
 

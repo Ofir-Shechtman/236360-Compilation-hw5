@@ -8,8 +8,12 @@ Register *RegisterManager::alloc(int bit_num) {
     return reg;
 }
 
+string Register::full_name() const {
+    return type()+" "+ name();
+}
+
 string Register::name() const {
-    return type()+" %"+ to_string(id);
+    return "%"+ to_string(id);
 }
 
 string Register::type() const {

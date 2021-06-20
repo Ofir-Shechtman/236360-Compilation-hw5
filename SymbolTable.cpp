@@ -93,12 +93,14 @@ void SymbolTable::add_Func(Variable *f) {
     auto args=  dynamic_cast<Func *>(f->type)->args();
     funcs.emplace_back(new Arg(f, 0));
     int offset=-1;
+    vector<string> args_type;
     for(auto a:args){
         int bit = a->type->name()=="BOOL" ? 1 : 32;
         a->exp->reg=RegisterManager::instance().alloc(bit);
         add_var(a, offset--);
+        args_type.emplace_back(a->type->reg_type());
     }
-    CodeBuffer::instance().emit(define(f->id->name(), args.size(), dynamic_cast<Func *>(f->type)->RetType->name()=="VOID"));
+    CodeBuffer::instance().emit(define(f->id->name(), args_type, dynamic_cast<Func *>(f->type)->RetType->reg_type()));
 
 }
 
@@ -109,7 +111,7 @@ void SymbolTable::add_var(Variable *v, int offset) {
     tables_stack.back().emplace_back(new_arg);
     if(new_arg->offset>=0) {
         auto& exp = new_arg->var->exp;
-        CodeBuffer::instance().emit(get_alloca(new_arg->ptr_name(), exp->get(),new_arg->var->id->name()));
+        CodeBuffer::instance().emit(get_alloca(new_arg->ptr_name(), exp->get(), new_arg->var->type->reg_type() ,new_arg->var->id->name()));
     }
 }
 
@@ -155,7 +157,7 @@ void SymbolTable::assign(STYPE *id_st, STYPE *exp_st, bool inplace) {
         output::errorMismatch(yylineno);
     if(!inplace) {
         auto arg = get_id_arg(id);
-        CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(), arg->ptr_name()));
+        CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),arg->var->type->reg_type() ,arg->ptr_name()));
         arg->var->exp->reg= nullptr;
     }
 }

@@ -3,21 +3,20 @@
 
 #include <vector>
 #include <string>
-
 using namespace std;
-
 //this enum is used to distinguish between the two possible missing labels of a conditional branch in LLVM during backpatching.
 //for an unconditional branch (which contains only a single label) use FIRST.
 enum BranchLabelIndex {FIRST, SECOND};
+typedef pair<int,BranchLabelIndex> pii;
 
 class CodeBuffer{
 	CodeBuffer();
 	CodeBuffer(CodeBuffer const&);
     void operator=(CodeBuffer const&);
-	std::vector<std::string> buffer;
 	std::vector<std::string> globalDefs;
 public:
-	static CodeBuffer &instance();
+    std::vector<std::string> buffer;
+    static CodeBuffer &instance();
 
 	// ******** Methods to handle the code section ******** //
 
@@ -26,6 +25,8 @@ public:
 
 	//writes command to the buffer, returns its location in the buffer
 	int emit(const std::string &command);
+
+    int nextInst() const;
 
 	//gets a pair<int,BranchLabelIndex> item of the form {buffer_location, branch_label_index} and creates a list for it
 	static vector<pair<int,BranchLabelIndex>> makelist(pair<int,BranchLabelIndex> item);
@@ -59,6 +60,28 @@ public:
 	void printGlobalBuffer();
 
 };
+
+class BooleanE{
+public:
+    vector<pair<int,BranchLabelIndex>> trueList;
+    vector<pair<int,BranchLabelIndex>> falseList;
+    BooleanE()=default;
+    void add(int label, BranchLabelIndex idx, bool which_list){
+        pair<int, BranchLabelIndex> item(label, idx);
+        if(which_list)
+            trueList = CodeBuffer::makelist(item);
+        else
+            falseList = CodeBuffer::makelist(item);
+    }
+    void add(int true_label, BranchLabelIndex true_idx,
+             int false_label, BranchLabelIndex false_idx){
+        pair<int, BranchLabelIndex> item1(true_label, true_idx);
+        trueList = CodeBuffer::makelist(item1);
+        pair<int, BranchLabelIndex> item2(false_label, false_idx);
+        falseList = CodeBuffer::makelist(item2);
+    }
+};
+
 
 #endif
 

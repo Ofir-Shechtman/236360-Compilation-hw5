@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include "semantics.hpp"
 using namespace std;
 
 bool replace(string& str, const string& from, const string& to, const BranchLabelIndex index);
@@ -27,6 +28,7 @@ int CodeBuffer::emit(const string &s){
     buffer.push_back(s);
 	return buffer.size() - 1;
 }
+
 
 void CodeBuffer::bpatch(const vector<pair<int,BranchLabelIndex>>& address_list, const std::string &label){
     for(vector<pair<int,BranchLabelIndex>>::const_iterator i = address_list.begin(); i != address_list.end(); i++){
@@ -69,6 +71,10 @@ void CodeBuffer::printGlobalBuffer()
 	{
 		cout << *it << endl;
 	}
+}
+
+int CodeBuffer::nextInst() const {
+    return buffer.size();
 }
 
 // ******** Helper Methods ********** //
