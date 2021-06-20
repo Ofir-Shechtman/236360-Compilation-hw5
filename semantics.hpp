@@ -36,10 +36,11 @@ public:
 
 class Exp : public STYPE{
 protected:
-    explicit Exp(int val=0):val(val), reg(nullptr){}
+    explicit Exp(int val=0):val(val), reg(nullptr), is_raw(true){}
     virtual ~Exp()=default;
 public:
     int val;
+    bool is_raw;
     Register* reg;
     virtual Type* type() const = 0;
     virtual string get() const;
@@ -81,8 +82,10 @@ public:
 class Boolean : public Exp{
 public:
     BooleanE data;
+    Boolean()=default;
     explicit Boolean(bool val);;
-    Boolean(STYPE* e1, STYPE* op, STYPE* e2, bool is_relop=false);
+    Boolean(STYPE* e1, STYPE* op, STYPE* e2);
+    Boolean(STYPE* e1, STYPE* op, STYPE* m, STYPE* e2);
     explicit Boolean(STYPE* e);
     Type* type() const override;
 };

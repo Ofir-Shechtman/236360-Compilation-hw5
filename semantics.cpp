@@ -17,10 +17,11 @@ Type *Boolean::type() const {
     return new Bool();
 }
 
-Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
+Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2) {
+    is_raw=false;
     auto ev1 = dynamic_cast<Exp*>(e1);
     auto ev2 = dynamic_cast<Exp*>(e2);
-    if(is_relop && is_num(ev1) &&  is_num(ev2)){
+    if(is_num(ev1) &&  is_num(ev2)){
         //int v1 = ev1->getVal();
         //int v2 = ev2->getVal();
         OP* my_op = dynamic_cast<OP*>(op);
@@ -54,18 +55,14 @@ Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2, bool is_relop) {
         data.add(nextInstr, FIRST, nextInstr, SECOND);
 
     }
-    else if(!is_relop && is_bool(ev1) && is_bool(ev2)){
-        OP* my_op = dynamic_cast<OP*>(op);
-        if(!my_op)
-            output::errorMismatch(yylineno);
-        reg=RegisterManager::instance().alloc(1);
-        CodeBuffer::instance().emit(get_binop(reg->name(), my_op->op, ev1->get(), ev2->get()));
-    }
     else
         output::errorMismatch(yylineno);
 }
 
+
+
 Boolean::Boolean(STYPE *e) {
+    is_raw=false;
     if(is_bool(e)) {
         auto temp = data.falseList;
         data.falseList = data.trueList;
@@ -76,8 +73,8 @@ Boolean::Boolean(STYPE *e) {
 }
 
 Boolean::Boolean(bool val) :Exp(val), data(){
-    auto nextInstr = CodeBuffer::instance().emit(br_uncond("@"));
-    data.add(nextInstr, FIRST, val);
+    //auto nextInstr = CodeBuffer::instance().emit(br_uncond("@"));
+    //data.add(nextInstr, FIRST, val);
 
 }
 
@@ -179,7 +176,10 @@ string Arg::ptr_name() const {
 }
 
 string Exp::get() const {
-    return type()->reg_type()+ " "+ to_string(val);
+    if(reg)
+        return reg->full_name();
+    else
+        return type()->reg_type()+ " "+ to_string(val);
 }
 
 Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
@@ -222,6 +222,14 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     }
     exp->reg=RegisterManager::instance().alloc(32);
     CodeBuffer::instance().emit(get_binop(exp->reg->name(), arith, ev1->get(), ev2->get()));
+    if(exp->type()->name()=="BYTE"){
+        //<result> = shl i32 4, 2
+        exp->reg=RegisterManager::instance().alloc(32);
+        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "shl", exp->reg->name(), "24"));
+        exp->reg=RegisterManager::instance().alloc(32);
+        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "shr", exp->reg->name(), "24"));
+
+    }
     return exp;
 }
 
@@ -241,13 +249,13 @@ string Id::get() const {
 Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type *>(type)),
                                                          id(dynamic_cast<Id *>(id)),
                                                          exp(dynamic_cast<Exp *>(exp)){
-    if(!exp){
+    if(!exp || !this->exp->is_raw){
         if(this->type->name()=="INT")
             this->exp = new Num("0");
         else if(this->type->name()=="BYTE")
             this->exp = new NumB("0");
         else if(this->type->name()=="BOOL")
-            this->exp = new Boolean(false);
+            this->exp = new Boolean();
     }
 
 }

@@ -3,6 +3,7 @@
 //
 
 #include "trick.hpp"
+#include "semantics.hpp"
 
 Statement::Statement(IfStatement *ifst) {
     auto b=ifst->b;
@@ -11,12 +12,10 @@ Statement::Statement(IfStatement *ifst) {
     auto& cb = CodeBuffer::instance();
     auto last_goto = CodeBuffer::instance().emit(br_uncond("@"));
     nextList = CodeBuffer::makelist(pii(last_goto, FIRST));
-    cb.bpatch(b->data.trueList, cb.buffer[m->instr]);
+    cb.bpatch(b->data.trueList, m->label);
     auto temp = CodeBuffer::merge(b->data.falseList, s->nextList);
     nextList= CodeBuffer::merge(nextList, temp);
-    int else_label = cb.nextInst();
-    cb.genLabel();
-    cb.bpatch(nextList, cb.buffer[else_label]);
+    cb.bpatch(nextList, cb.genLabel());
 
 
 }
@@ -30,13 +29,36 @@ Statement::Statement(IfStatement *ifst, MarkerN* n, Scope *s) {
     auto& cb = CodeBuffer::instance();
     auto last_goto = CodeBuffer::instance().emit(br_uncond("@"));
     nextList = CodeBuffer::makelist(pii(last_goto, FIRST));
-    cb.bpatch(b->data.trueList, cb.buffer[m1->instr]);
-    cb.bpatch(b->data.falseList, cb.buffer[m2->instr]);
+    cb.bpatch(b->data.trueList, m1->label);
+    cb.bpatch(b->data.falseList, m2->label);
     auto temp1 =CodeBuffer::merge(s1->nextList, n->nextList);
     auto temp2 = CodeBuffer::merge(temp1, s2->nextList);
     nextList = CodeBuffer::merge(temp2, nextList);
-    int next_label = cb.nextInst();
-    cb.genLabel();
-    cb.bpatch(nextList, cb.buffer[next_label]);
+    cb.bpatch(nextList, cb.genLabel());
 
+}
+
+
+Boolean::Boolean(STYPE *e1, STYPE *sop, STYPE *sm, STYPE *e2) {
+    is_raw=false;
+    auto b1 = dynamic_cast<Boolean *>(e1);
+    auto op = dynamic_cast<OP *>(sop);
+    auto b2 = dynamic_cast<Boolean *>(e2);
+    auto m = dynamic_cast<MarkerM *>(sm);
+
+    if (b1 && op && b2 && m) {
+        auto &cb = CodeBuffer::instance();
+        if (op->op == "or") {
+            cb.bpatch(b1->data.falseList, m->label);
+            data.trueList = CodeBuffer::merge(b1->data.trueList,
+                                              b2->data.trueList);
+            data.falseList = b2->data.falseList;
+        } else if (op->op == "and") {
+            cb.bpatch(b1->data.trueList, m->label);
+            data.trueList = b2->data.trueList;
+            data.falseList = CodeBuffer::merge(b1->data.falseList,
+                                               b2->data.falseList);
+        }
+    } else
+        output::errorMismatch(yylineno);
 }

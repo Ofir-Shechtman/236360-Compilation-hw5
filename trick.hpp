@@ -30,11 +30,8 @@ struct Statement: public STYPE{
 
 
 struct MarkerM: public STYPE{
-    int instr;
-    MarkerM():instr(CodeBuffer::instance().nextInst()) {
-        CodeBuffer::instance().genLabel();
-
-    }
+    string label;
+    MarkerM():label(CodeBuffer::instance().genLabel()) {}
 };
 
 struct MarkerN: public STYPE{
