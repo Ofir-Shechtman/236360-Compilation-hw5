@@ -42,7 +42,7 @@ void SymbolTable::print_funcs() const {
     if(MainMissing) output::errorMainMissing();
     output::endScope();
     for(auto f:funcs){
-        f->print();
+        //f->print();
     }
 
 }
@@ -66,7 +66,7 @@ void SymbolTable::push_while(STYPE *rt) {
 void SymbolTable::pop() {
     output::endScope();
     for(auto a:tables_stack.back()){
-        a->print();
+        //a->print();
     }
     tables_stack.pop_back();
     offsets_stack.pop_back();

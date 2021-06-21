@@ -4,6 +4,7 @@
    #include "SymbolTable.hpp"
    #include "RegisterManager.hpp"
    #include "hw3_output.hpp"
+   #include "global.hpp"
    #include "trick.hpp"
    extern int yylineno;
    int yylex(void);
@@ -121,10 +122,10 @@ void yyerror(const char*){
 
 
 
+
 int main(){
     auto p= yyparse();
-    //SymbolTable::GetInstance()->print_funcs();
-    cout << "-----------CodeBuffer-----------"<<endl;
+    print_file();
     CodeBuffer::instance().printCodeBuffer();
     return p;
 }

@@ -1927,11 +1927,12 @@ void yyerror(const char*){
 }
 
 
-
+#include "global.hpp"
+std::string line;
 int main(){
     auto p= yyparse();
-    //SymbolTable::GetInstance()->print_funcs();
-    cout << "-----------CodeBuffer-----------"<<endl;
+    load_global();
+    CodeBuffer::instance().printGlobalBuffer();
     CodeBuffer::instance().printCodeBuffer();
     return p;
 }
