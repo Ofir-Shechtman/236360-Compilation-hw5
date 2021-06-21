@@ -17,8 +17,8 @@ string load(const string& reg_name, const string& type, const string& ptr);
 string store(const string& reg_name, const string& type, const string& ptr);
 string ret(const string& reg_name);
 string ret_void();
-string br_uncond(const string& label);
-string br_cond(const string& reg_name, const string& label_true, const string& label_false);
+string br_uncond(string label="@");
+string br_cond(const string& reg_name, string label_true="@", string label_false="@");
 string phi(const string& ptr, const string& type, vector<pair<string, string>> pairs);
 
 #endif //HW5_LLVM_FUNCS_H

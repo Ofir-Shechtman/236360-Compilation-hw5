@@ -65,13 +65,19 @@ string store(const string& reg_name, const string& type, const string& ptr) {
     return res.str();
 }
 
-string br_uncond(const string &label) {
+string br_uncond(string label) {
+    if(label!="@")
+        label = "%"+label;
     return "\tbr label " + label;
 }
 
-string br_cond(const string &reg_name, const string &label_true,
-               const string &label_false) {
+string br_cond(const string& reg_name, string label_true,
+               string label_false) {
     //br i1 %b, label %then, label %else
+    if(label_true!="@")
+        label_true = "%"+label_true;
+    if(label_false!="@")
+        label_false = "%"+label_false;
     return "\tbr " + reg_name + ", label " +label_true + ", " + label_false;
 }
 

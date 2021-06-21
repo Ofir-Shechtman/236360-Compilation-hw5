@@ -49,7 +49,7 @@ FormalDecl : Type NEWID {$$= new Variable($1, $2);}
 Statements : Statement {$$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($1));}
         | Statements Statement {$$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($1)); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($2));}
 
-Statement : LBRACE Scope RBRACE {$$ = new Statement();}
+Statement : LBRACE Scope RBRACE {$$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($2));}
         | Type NEWID SC {SymbolTable::GetInstance()->add_var(new Variable($1, $2)); } {$$ = new Statement();}
         | Type NEWID ASSIGN Exp SC {SymbolTable::GetInstance()->add_var(new Variable($1, $2, $4)); SymbolTable::GetInstance()->assign($2,$4, true);} {$$ = new Statement();}
         | NEWID ASSIGN Exp SC {SymbolTable::GetInstance()->assign($1,$3, false);} {$$ = new Statement();}
@@ -57,21 +57,25 @@ Statement : LBRACE Scope RBRACE {$$ = new Statement();}
         | RETURN SC {SymbolTable::GetInstance()->check_return(new Void());} {$$ = new Statement();}
         | RETURN Exp SC {SymbolTable::GetInstance()->check_return($2);} {$$ = new Statement();}
         | IfStatement %prec IF {$$ = new Statement(dynamic_cast<IfStatement *>($1));}
-        | IfStatement N ScopeM %prec ELSE {$$ = new Statement(dynamic_cast<IfStatement *>($1), dynamic_cast<MarkerN *>($2), dynamic_cast<Scope *>($3));}
-        | WHILE LPAREN Exp {if(!is_bool($3)) output::errorMismatch(yylineno);} RPAREN {SymbolTable::GetInstance()->push_while(new ReturnType("while"));} Statement {SymbolTable::GetInstance()->pop_while();} {$$ = new Statement();}
-        | BREAK SC {SymbolTable::GetInstance()->check_while(new ReturnType("break"));} {$$ = new Statement();}
-        | CONTINUE SC {SymbolTable::GetInstance()->check_while(new ReturnType("continue"));} {$$ = new Statement();}
-        | SWITCH LPAREN Exp {if(!is_num($3)) output::errorMismatch(yylineno);} RPAREN LBRACE {SymbolTable::GetInstance()->push(); SymbolTable::GetInstance()->enter_switch();} CaseList {SymbolTable::GetInstance()->pop(); SymbolTable::GetInstance()->exit_switch();} RBRACE {$$ = new Statement();}
+        | IfStatement N_ELSE ScopeM %prec ELSE {$$ = new Statement(dynamic_cast<IfStatement *>($1), dynamic_cast<MarkerN *>($2), dynamic_cast<Scope *>($3));}
+        | WHILE M_br LPAREN Exp {if(!is_bool($4)) output::errorMismatch(yylineno);} RPAREN M {SymbolTable::GetInstance()->push_while(new ReturnType("while"));} Statement {SymbolTable::GetInstance()->pop_while();} {$$ = new Statement(dynamic_cast<MarkerM *>($2), dynamic_cast<Boolean *>($4), dynamic_cast<MarkerM *>($7), dynamic_cast<Statement *>($9));}
+        | BREAK SC {SymbolTable::GetInstance()->check_while(new ReturnType("break"));} {$$ = new Statement(1);}
+        | CONTINUE SC {SymbolTable::GetInstance()->check_while(new ReturnType("continue"));} {$$ = new Statement(2);}
+        | SWITCH LPAREN Exp N {if(!is_num($3)) output::errorMismatch(yylineno);} RPAREN LBRACE {SymbolTable::GetInstance()->push(); SymbolTable::GetInstance()->enter_switch();} CaseList {SymbolTable::GetInstance()->pop(); SymbolTable::GetInstance()->exit_switch();} RBRACE {$$ = new Statement(dynamic_cast<Exp *>($3), dynamic_cast<MarkerN *>($4), dynamic_cast<CaseList *>($9));}
 
 IfStatement : IF LPAREN Exp {if(!is_bool($3)) output::errorMismatch(yylineno);} RPAREN ScopeM {$$ = new IfStatement($3, $6);}
 
 ScopeM : {SymbolTable::GetInstance()->push();} M Statement {SymbolTable::GetInstance()->pop(); $$=new Scope($2, $3);}
 
-Scope : {SymbolTable::GetInstance()->push();} Statements {SymbolTable::GetInstance()->pop();}
+Scope : {SymbolTable::GetInstance()->push();} Statements {SymbolTable::GetInstance()->pop(); $$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($2));}
 
 M : {$$=new MarkerM();}
 
-N : ELSE {$$=new MarkerN();}
+M_br : {$$=new MarkerM(true);}
+
+N_ELSE: ELSE N
+
+N : {$$=new MarkerN();}
 
 Call : NEWID LPAREN ExpList RPAREN {$$=new Call($1, $3);}
         | NEWID LPAREN RPAREN {$$=new Call($1);}
@@ -99,11 +103,11 @@ Exp : LPAREN Exp RPAREN {$$=$2;}
         | Exp EQUALITY Exp {$$=new Boolean($1, $2, $3);}
         | Exp RELOP Exp {$$=new Boolean($1, $2, $3);}
 
-CaseList : CaseDecl CaseList {}
-        | CaseDecl {}
-        | DEFAULT COLON Statements {}
+CaseList : CaseDecl CaseList {$$ = new CaseList(dynamic_cast<CaseDecl *>($1), dynamic_cast<CaseList *>($2));}
+        | CaseDecl {$$ = new CaseList(dynamic_cast<CaseDecl *>($1));}
+        | DEFAULT COLON M Statements   {$$ = new CaseList(dynamic_cast<CaseDecl *>(new CaseDecl(dynamic_cast<MarkerM *>($3), dynamic_cast<Statement *>($4))));}
 
-CaseDecl : CASE NUM COLON Statements {}
+CaseDecl : CASE NUM COLON M Statements {$$ = new CaseDecl(dynamic_cast<MarkerM *>($4), dynamic_cast<Statement *>($5), dynamic_cast<Num *>($2));}
 
 NEWID : ID
       | B {$$=new Id(yytext);}

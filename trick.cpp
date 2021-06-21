@@ -38,6 +38,70 @@ Statement::Statement(IfStatement *ifst, MarkerN* n, Scope *s) {
 
 }
 
+Statement::Statement(MarkerM * m1, Boolean * b, MarkerM * m2, Statement* s) {
+//    backpatch(S1.nextList, M1.instr);
+//    backpatch(B.trueList, M2.instr);
+//    S.nextList = B.falseList;
+//    emit(‘goto’ M1.instr);
+    auto& cb = CodeBuffer::instance();
+    nextList =CodeBuffer::merge(s->nextList, nextList);
+    cb.bpatch(nextList, m1->label);
+    cb.bpatch( b->data.trueList, m2->label);
+    nextList = b->data.falseList;
+    CodeBuffer::instance().emit(br_uncond(m1->label));
+    cb.bpatch(CodeBuffer::merge(s->breakList, b->data.falseList), cb.genLabel());
+
+
+
+
+
+}
+
+Statement::Statement(int type) {
+    if(type == 1) {//break
+        auto& cb = CodeBuffer::instance();
+        auto br = cb.emit(br_uncond("@"));
+        breakList = CodeBuffer::makelist(pii(br,FIRST));
+
+    }
+    else if(type == 2) {//continue
+        auto& cb = CodeBuffer::instance();
+        auto br = cb.emit(br_uncond("@"));
+        nextList = CodeBuffer::makelist(pii(br,FIRST));
+    }
+}
+
+Statement::Statement(Exp* e, MarkerN* n, CaseList* cl) {
+    CodeBuffer::instance().bpatch(n->nextList, CodeBuffer::instance().genLabel());
+    string next_label;
+    for(int i=0 ;i<cl->cl.size();++i){
+
+        if(!cl->cl[i]->num){//default
+            CodeBuffer::instance().emit(br_uncond(cl->cl[i]->m->label));
+            next_label = CodeBuffer::instance().genLabel();
+            nextList = CodeBuffer::merge(nextList, cl->cl[i]->nextList);
+        }
+//        else if(i!=cl->cl.size()-1) {//last no default
+//            auto reg=RegisterManager::instance().alloc(1);
+//            CodeBuffer::instance().emit(get_binop(reg->name(), "eq", e->get(), cl->cl[i]->num->get()));
+//            auto last = CodeBuffer::instance().emit(br_cond(reg->full_name(), cl->cl[i]->m->label, "@"));
+//            nextList = CodeBuffer::merge(nextList, CodeBuffer::makelist(pii(last, SECOND)));
+//        }
+
+
+        else{
+            auto reg=RegisterManager::instance().alloc(1);
+            CodeBuffer::instance().emit(get_binop(reg->name(), "eq", e->get(), cl->cl[i]->num->get()));
+            auto next_cmd = CodeBuffer::instance().emit(br_cond(reg->full_name(), cl->cl[i]->m->label,"@"));
+            next_label = CodeBuffer::instance().genLabel();
+            CodeBuffer::instance().bpatch(CodeBuffer::makelist(pii(next_cmd, SECOND)), next_label);
+            nextList = CodeBuffer::merge(nextList, cl->cl[i]->breakList);
+        }
+
+    }
+    CodeBuffer::instance().bpatch(nextList, next_label);
+}
+
 
 Boolean::Boolean(STYPE *e1, STYPE *sop, STYPE *sm, STYPE *e2) {
     is_raw=false;

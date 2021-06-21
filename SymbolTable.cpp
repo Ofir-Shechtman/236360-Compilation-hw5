@@ -156,7 +156,7 @@ void SymbolTable::assign(STYPE *id_st, STYPE *exp_st, bool inplace) {
     if(!(id_t->name() == exp_type->name() || (id_t->name() == "INT" && exp_type->name() == "BYTE")))
         output::errorMismatch(yylineno);
     if(!dynamic_cast<Exp *>(exp_st)->is_raw){
-
+        output::errorSyn(yylineno);
     }
     else if(!inplace) {
         auto arg = get_id_arg(id);

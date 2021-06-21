@@ -225,9 +225,8 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     if(exp->type()->name()=="BYTE"){
         //<result> = shl i32 4, 2
         exp->reg=RegisterManager::instance().alloc(32);
-        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "shl", exp->reg->name(), "24"));
-        exp->reg=RegisterManager::instance().alloc(32);
-        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "shr", exp->reg->name(), "24"));
+        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "and", exp->reg->name(), "255"));
+
 
     }
     return exp;
