@@ -7,11 +7,10 @@
 using namespace std;
 
 
-string get_alloca(const string& ptr_name, const string &reg_name, const string & type, const string & id_name){
+string get_alloca(const string& ptr_name, const string & type, const string & id_name){
     //%arr = alloca i32, i32 %size
     stringstream res;
-    res << "\t"<<ptr_name << " = alloca "<<type<<", ";
-    res<< reg_name;
+    res << "\t"<<ptr_name << " = alloca "<<type;
     while(res.str().size()<33){
         res << " ";
     }

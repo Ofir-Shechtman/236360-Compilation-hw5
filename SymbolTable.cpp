@@ -111,7 +111,7 @@ void SymbolTable::add_var(Variable *v, int offset) {
     tables_stack.back().emplace_back(new_arg);
     if(new_arg->offset>=0) {
         auto& exp = new_arg->var->exp;
-        CodeBuffer::instance().emit(get_alloca(new_arg->ptr_name(), exp->get(), new_arg->var->type->reg_type() ,new_arg->var->id->name()));
+        CodeBuffer::instance().emit(get_alloca(new_arg->ptr_name(), new_arg->var->type->reg_type() ,new_arg->var->id->name()));
     }
 }
 
@@ -147,7 +147,7 @@ bool SymbolTable::contain_func(const string &name) const {
     return t != nullptr;
 }
 
-void SymbolTable::assign(STYPE *id_st, STYPE *exp_st, bool inplace) {
+void SymbolTable::assign(STYPE *id_st, STYPE *exp_st) {
     Id* id = dynamic_cast<Id *>(id_st);
     Type* exp_type = dynamic_cast<Exp *>(exp_st)->type();
     if(!contain_var(id->name()))
@@ -158,11 +158,10 @@ void SymbolTable::assign(STYPE *id_st, STYPE *exp_st, bool inplace) {
     if(!dynamic_cast<Exp *>(exp_st)->is_raw){
         output::errorSyn(yylineno);
     }
-    else if(!inplace) {
-        auto arg = get_id_arg(id);
-        CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),arg->var->type->reg_type() ,arg->ptr_name()));
-        arg->var->exp->reg= nullptr;
-    }
+    auto arg = get_id_arg(id);
+    CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),arg->var->type->reg_type() ,arg->ptr_name()));
+    arg->var->exp->reg= nullptr;
+
 }
 
 void SymbolTable::check_return(STYPE *t) {

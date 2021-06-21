@@ -3,6 +3,7 @@
 
 #include "semantics.hpp"
 #include "llvm_funcs.hpp"
+#include "SymbolTable.hpp"
 #include "bp.hpp"
 #include <vector>
 #include <string>
@@ -21,7 +22,7 @@ struct Statement: public STYPE{
     Statement(int type=0);
     explicit Statement(IfStatement *ifst);
     Statement(IfStatement *ifst, MarkerN* n, Scope* m);
-    Statement(MarkerM* m1, Boolean* b, MarkerM* m2, Statement* s);
+    Statement(MarkerM* m1, STYPE* b, MarkerM* m2, Statement* s);
     Statement(Exp* e, MarkerN* n, CaseList* cl); // switch
     void merge(Statement * s){
         nextList=CodeBuffer::merge(nextList, s->nextList);
@@ -65,7 +66,10 @@ struct Scope: public STYPE{
 struct IfStatement: public STYPE{
     Boolean* b;
     Scope* s;
-    IfStatement(STYPE* e, STYPE* s):b(dynamic_cast<Boolean*>(e)), s(dynamic_cast<Scope*>(s)){}
+    IfStatement(STYPE* e, STYPE* s):b(dynamic_cast<Boolean*>(e)), s(dynamic_cast<Scope*>(s)){
+        if(!b)
+            b= dynamic_cast<Boolean*>(SymbolTable::GetInstance()->get_id_arg(dynamic_cast<Id*>(e))->var->exp);
+    }
 };
 
 

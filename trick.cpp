@@ -38,11 +38,8 @@ Statement::Statement(IfStatement *ifst, MarkerN* n, Scope *s) {
 
 }
 
-Statement::Statement(MarkerM * m1, Boolean * b, MarkerM * m2, Statement* s) {
-//    backpatch(S1.nextList, M1.instr);
-//    backpatch(B.trueList, M2.instr);
-//    S.nextList = B.falseList;
-//    emit(‘goto’ M1.instr);
+Statement::Statement(MarkerM * m1, STYPE * sb, MarkerM * m2, Statement* s) {
+    auto b= dynamic_cast<Boolean*>(sb);
     auto& cb = CodeBuffer::instance();
     nextList =CodeBuffer::merge(s->nextList, nextList);
     cb.bpatch(nextList, m1->label);

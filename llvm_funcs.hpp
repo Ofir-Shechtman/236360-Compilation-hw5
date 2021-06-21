@@ -10,7 +10,7 @@
 using namespace std;
 
 
-string get_alloca(const string& ptr_name, const string &reg_name, const string & type, const string& id_name);
+string get_alloca(const string& ptr_name, const string & type, const string& id_name);
 string define(const string &func_name, const vector<string>& arg_type, const string & type);
 string get_binop(const string& reg_name, const string& op, const string& l, const string& r);
 string load(const string& reg_name, const string& type, const string& ptr);

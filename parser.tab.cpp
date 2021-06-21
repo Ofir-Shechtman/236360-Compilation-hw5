@@ -1366,25 +1366,25 @@ yyreduce:
 
   case 20: /* $@4: %empty  */
 #line 55 "parser.ypp"
-                                   {SymbolTable::GetInstance()->add_var(new Variable(yyvsp[-4], yyvsp[-3], yyvsp[-1])); SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1], true);}
+                                   {SymbolTable::GetInstance()->add_var(new Variable(yyvsp[-4], yyvsp[-3], yyvsp[-1])); SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1]);}
 #line 1371 "parser.tab.cpp"
     break;
 
   case 21: /* Statement: Type NEWID ASSIGN Exp SC $@4  */
 #line 55 "parser.ypp"
-                                                                                                                                                     {yyval = new Statement();}
+                                                                                                                                               {yyval = new Statement();}
 #line 1377 "parser.tab.cpp"
     break;
 
   case 22: /* $@5: %empty  */
 #line 56 "parser.ypp"
-                              {SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1], false);}
+                              {SymbolTable::GetInstance()->assign(yyvsp[-3],yyvsp[-1]);}
 #line 1383 "parser.tab.cpp"
     break;
 
   case 23: /* Statement: NEWID ASSIGN Exp SC $@5  */
 #line 56 "parser.ypp"
-                                                                                  {yyval = new Statement();}
+                                                                           {yyval = new Statement();}
 #line 1389 "parser.tab.cpp"
     break;
 
@@ -1456,7 +1456,7 @@ yyreduce:
 
   case 35: /* Statement: WHILE M_br LPAREN Exp $@9 RPAREN M $@10 Statement $@11  */
 #line 62 "parser.ypp"
-                                                                                                                                                                                                                     {yyval = new Statement(dynamic_cast<MarkerM *>(yyvsp[-8]), dynamic_cast<Boolean *>(yyvsp[-6]), dynamic_cast<MarkerM *>(yyvsp[-3]), dynamic_cast<Statement *>(yyvsp[-1]));}
+                                                                                                                                                                                                                     {yyval = new Statement(dynamic_cast<MarkerM *>(yyvsp[-8]), yyvsp[-6], dynamic_cast<MarkerM *>(yyvsp[-3]), dynamic_cast<Statement *>(yyvsp[-1]));}
 #line 1461 "parser.tab.cpp"
     break;
 
