@@ -3,8 +3,8 @@
 #include "RegisterManager.hpp"
 using namespace std;
 
-Register *RegisterManager::alloc(int bit_num) {
-    auto reg = new Register(register_count++, bit_num);
+Register *RegisterManager::alloc(int bit_num, bool is_arg) {
+    auto reg = new Register(register_count++, bit_num, is_arg);
     return reg;
 }
 
@@ -13,7 +13,8 @@ string Register::full_name() const {
 }
 
 string Register::name() const {
-    return "%"+ to_string(id);
+    string t = is_arg ? "" : "t";
+    return "%"+t+ to_string(id);
 }
 
 string Register::type() const {

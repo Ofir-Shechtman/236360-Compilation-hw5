@@ -5,5 +5,8 @@
 #include <iostream>
 #include "bp.hpp"
 
-void load_global();
+void load_const();
+void load_funcs();
+
+
 #endif //HW5_GLOBAL_HPP

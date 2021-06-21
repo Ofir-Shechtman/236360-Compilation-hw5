@@ -96,7 +96,7 @@ void SymbolTable::add_Func(Variable *f) {
     vector<string> args_type;
     for(auto a:args){
         int bit = a->type->name()=="BOOL" ? 1 : 32;
-        a->exp->reg=RegisterManager::instance().alloc(bit);
+        a->exp->reg=RegisterManager::instance().alloc(bit, true);
         add_var(a, offset--);
         args_type.emplace_back(a->type->reg_type());
     }
@@ -179,7 +179,8 @@ void SymbolTable::check_return(STYPE *t) {
         Type *ret_type = (dynamic_cast<Exp *>(t))->type();
         if(ret_type->name()!=cur_return->name() && !(cur_return->name()=="INT" && ret_type->name()=="BYTE"))
             output::errorMismatch(yylineno);
-        CodeBuffer::instance().emit(ret(dynamic_cast<Exp *>(t)->get()));
+        auto e = dynamic_cast<Exp *>(t);
+        CodeBuffer::instance().emit(ret( e->get()));
     }
 
 }
@@ -210,6 +211,11 @@ Arg* SymbolTable::get_id_arg(const Id *id) const {
 
 
 void SymbolTable::pop_func() {
+    auto t=dynamic_cast<Func*>(funcs.back()->var->type)->RetType->reg_type();
+    if(t=="void")
+        CodeBuffer::instance().emit(ret_void());
+    else
+        CodeBuffer::instance().emit(ret(t+" 0"));
     pop();
     CodeBuffer::instance().emit("}\n");
     RegisterManager::instance().reset();

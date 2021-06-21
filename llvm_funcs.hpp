@@ -20,5 +20,9 @@ string ret_void();
 string br_uncond(string label="@");
 string br_cond(const string& reg_name, string label_true="@", string label_false="@");
 string phi(const string& ptr, const string& type, vector<pair<string, string>> pairs);
+string call_void(const string &type, const string &func_name, const vector<string> &args);
+string call(const string &reg_name, const string &type, const string &func_name, const vector<string> &args);
+string internal_const(const string &reg_name, int len, const string &the_string);
+string getelementptr(const string &reg_name, int size, const string &const_name);
 
 #endif //HW5_LLVM_FUNCS_H

@@ -74,7 +74,7 @@ M : {$$=new MarkerM();}
 
 M_br : {$$=new MarkerM(true);}
 
-N_ELSE: ELSE N
+N_ELSE: ELSE N {$$=$2;}
 
 N : {$$=new MarkerN();}
 
@@ -123,9 +123,12 @@ void yyerror(const char*){
 
 
 
+std::string line;
 int main(){
+    load_const();
     auto p= yyparse();
-    print_file();
+    load_funcs();
+    CodeBuffer::instance().printGlobalBuffer();
     CodeBuffer::instance().printCodeBuffer();
     return p;
 }

@@ -48,7 +48,7 @@ Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2) {
             //val=(v1>v2);
         else
             output::errorMismatch(yylineno);
-        string l=ev1->get(), r=ev2->get();
+        string l=ev1->get(), r=ev2->get(false);
         reg=RegisterManager::instance().alloc(1);
         CodeBuffer::instance().emit(get_binop(reg->name(), arith, l, r));
         auto nextInstr = CodeBuffer::instance().emit(br_cond(reg->full_name(), "@", "@"));
@@ -81,6 +81,28 @@ Boolean::Boolean(bool val) :Exp(val), data(){
 
 Type *String::type() const {
     return new TypeString();
+}
+
+String::String(string val) :str(val.substr(1,val.size()-2)){
+    val =val.substr(1,val.size()-2);
+    for(auto i:SymbolTable::GetInstance()->const_strings){
+        if(i->str==val){
+            const_name = i->const_name;
+            return;
+        }
+    }
+    SymbolTable::GetInstance()->const_strings.emplace_back(this);
+    const_name = "const_"+ to_string(SymbolTable::GetInstance()->const_strings.size());
+    CodeBuffer::instance().emitGlobal(internal_const(const_name, str.length(), str));
+
+}
+
+string String::get(bool full_const) const {
+    auto newreg = RegisterManager::instance().alloc(32);
+    CodeBuffer::instance().emit(getelementptr(newreg->name(), str.size()+2, const_name));
+    if(full_const)
+        return "i8* " + newreg->name();
+    return newreg->name();
 }
 
 bool is_type(STYPE* e, string type) {
@@ -124,6 +146,15 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
             output::errorPrototypeMismatch(yylineno, id->name(), f_args);
     }
     t= dynamic_cast<Func *>(st->get_func_type(id))->RetType;
+    vector<string> str_args;
+    for(auto a:el->exp_list){
+        str_args.emplace_back(a->exp->get(true));
+    }
+    this->reg=RegisterManager::instance().alloc(32);
+    if(st->get_func_type(id)->RetType->name()=="VOID")
+        CodeBuffer::instance().emit(call_void(t->reg_type(), id->name(), str_args));
+    else
+        CodeBuffer::instance().emit(call(this->reg->name(), t->reg_type(), id->name(), str_args));
 }
 
 void ExpList::add(STYPE *e) {
@@ -175,20 +206,27 @@ string Arg::ptr_name() const {
     return "%ptr" + to_string(offset);
 }
 
-string Exp::get() const {
-    if(reg)
-        return reg->full_name();
+string Exp::get(bool full_const) const {
+    if (reg){
+        if(full_const)
+            return reg->full_name();
+        else
+            return reg->name();
+    }
+    else if (full_const)
+        return type()->reg_type() + " " + to_string(val);
     else
-        return type()->reg_type()+ " "+ to_string(val);
+        return to_string(val);
 }
+
 
 Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     if(!is_num(e1) ||  !is_num(e2))
         output::errorMismatch(yylineno);
     auto ev1 = dynamic_cast<Exp*>(e1);
     auto ev2 = dynamic_cast<Exp*>(e2);
-    if(ev1->type()->name()!=ev2->type()->name())
-        output::errorMismatch(yylineno);
+    //if(ev1->type()->name()!=ev2->type()->name())
+    //    output::errorMismatch(yylineno);
     Exp *exp = nullptr;
     if(ev1->type()->name()=="INT")
         exp = new Num("0");
@@ -221,18 +259,19 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
         output::errorMismatch(yylineno);
     }
     exp->reg=RegisterManager::instance().alloc(32);
-    CodeBuffer::instance().emit(get_binop(exp->reg->name(), arith, ev1->get(), ev2->get()));
+    CodeBuffer::instance().emit(get_binop(exp->reg->name(), arith, ev1->get(), ev2->get(false)));
     if(exp->type()->name()=="BYTE"){
         //<result> = shl i32 4, 2
-        exp->reg=RegisterManager::instance().alloc(32);
-        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "and", exp->reg->name(), "255"));
+        auto new_reg=RegisterManager::instance().alloc(32);
+        CodeBuffer::instance().emit(get_binop(new_reg->name(), "and", exp->reg->full_name(), "255"));
+        exp->reg=new_reg;
 
 
     }
     return exp;
 }
 
-string Id::get() const {
+string Id::get(bool full_const) const {
     auto arg = SymbolTable::GetInstance()->get_id_arg(this);
     if (!arg)
         output::errorUndef(yylineno, this->name());

@@ -7,10 +7,11 @@ class Register{
 public:
     unsigned int id;
     int bit_num;
+    bool is_arg;
     string type() const;
     string name() const;
     string full_name() const;
-    explicit Register(unsigned int id, int bit_num):id(id), bit_num(bit_num){}
+    explicit Register(unsigned int id, int bit_num, bool is_arg=false):id(id), bit_num(bit_num), is_arg(is_arg){}
 };
 
 class RegisterManager {
@@ -20,7 +21,7 @@ public:
     RegisterManager(RegisterManager const &) = delete;
     void operator=(RegisterManager const &) = delete;
     static RegisterManager &instance();
-    Register* alloc(int bit_num);
+    Register* alloc(int bit_num, bool is_arg=false);
     void reset();
 
 };

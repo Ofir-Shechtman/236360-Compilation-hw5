@@ -17,6 +17,7 @@ class SymbolTable{
     static SymbolTable* singleton_;
     SymbolTable();;
 public:
+    vector<String*> const_strings;
 
     ~SymbolTable(){
         print_funcs();

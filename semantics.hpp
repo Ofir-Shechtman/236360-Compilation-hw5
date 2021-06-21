@@ -43,7 +43,7 @@ public:
     bool is_raw;
     Register* reg;
     virtual Type* type() const = 0;
-    virtual string get() const;
+    virtual string get(bool full_const=true) const;
 };
 
 Exp* binop(STYPE* e1, STYPE* op, STYPE* e2);
@@ -55,7 +55,7 @@ public:
     explicit Id(const string val) : id_name(val){};
     string name() const{return id_name;}
     Type* type() const override;
-    string get() const override;
+    string get(bool full_const=true) const override;
 };
 bool is_type(STYPE* e, string type) ;
 
@@ -90,10 +90,13 @@ public:
     Type* type() const override;
 };
 
-class String: public STYPE{
+class String: public Exp{
+    string str;
+    string const_name;
 public:
-    explicit String(string val){};
+    explicit String(string val);;
     Type* type() const;
+    string get(bool full_const=true) const override;
 };
 
 
