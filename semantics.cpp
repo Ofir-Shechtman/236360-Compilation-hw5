@@ -76,7 +76,7 @@ Boolean::Boolean(bool val, bool br) :Exp(val), data(){
     if(br) {
         auto nextInstr = CodeBuffer::instance().emit(br_uncond("@"));
         data.add(nextInstr, FIRST, val);
-        is_raw=false;
+        is_raw=true;
     }
 
 }
@@ -150,8 +150,18 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
     }
     t= dynamic_cast<Func *>(st->get_func_type(id))->RetType;
     vector<string> str_args;
+    auto br = CodeBuffer::instance().emit(br_uncond());
+    auto call_label = CodeBuffer::instance().genLabel();
+    CodeBuffer::instance().bpatch(CodeBuffer::makelist(pii(br,FIRST)), call_label);
     for(auto a:el->exp_list){
         str_args.emplace_back(a->exp->get(true));
+        if(a->type->name()=="BOOL") {
+            auto b = dynamic_cast<Boolean*>(a->exp);
+            auto l = b->data.falseList;
+            if(b->val)
+                l = b->data.trueList;
+            CodeBuffer::instance().bpatch(l, call_label);
+        }
     }
     if(st->get_func_type(id)->RetType->name()=="VOID")
         CodeBuffer::instance().emit(call_void(t->reg_type(), id->name(), str_args));
@@ -166,6 +176,12 @@ void ExpList::add(STYPE *e) {
     auto exp = dynamic_cast<Exp *>(e);
     if(!exp)
         output::errorSyn(yylineno);
+    if(exp->type()->name()=="BOOL" && !exp->is_raw) {
+        output::errorSyn(yylineno);
+//        exp->reg = RegisterManager::instance().alloc(1);
+//        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "add", exp->get(),
+//                          (new Boolean(exp->val, false))->get()));
+    }
     Type* t =  exp->type();
     auto et = new ExpType(t, exp);
     exp_list.insert(exp_list.begin(), et);
