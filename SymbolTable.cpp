@@ -155,10 +155,11 @@ void SymbolTable::assign(STYPE *id_st, STYPE *exp_st) {
     auto id_t = get_id_type(id);
     if(!(id_t->name() == exp_type->name() || (id_t->name() == "INT" && exp_type->name() == "BYTE")))
         output::errorMismatch(yylineno);
-    if(!dynamic_cast<Exp *>(exp_st)->is_raw){
-        output::errorSyn(yylineno);
-    }
     auto arg = get_id_arg(id);
+    if(!dynamic_cast<Exp *>(exp_st)->is_raw){
+        return;
+        //output::errorSyn(yylineno);
+    }
     CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),arg->var->type->reg_type() ,arg->ptr_name()));
     arg->var->exp->reg= nullptr;
 

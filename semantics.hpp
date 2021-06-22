@@ -83,7 +83,7 @@ class Boolean : public Exp{
 public:
     BooleanE data;
     Boolean()=default;
-    explicit Boolean(bool val);;
+    explicit Boolean(bool val, bool br=true);;
     Boolean(STYPE* e1, STYPE* op, STYPE* e2);
     Boolean(STYPE* e1, STYPE* op, STYPE* m, STYPE* e2);
     explicit Boolean(STYPE* e);

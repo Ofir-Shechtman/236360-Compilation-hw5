@@ -72,9 +72,12 @@ Boolean::Boolean(STYPE *e) {
     output::errorMismatch(yylineno);
 }
 
-Boolean::Boolean(bool val) :Exp(val), data(){
-    //auto nextInstr = CodeBuffer::instance().emit(br_uncond("@"));
-    //data.add(nextInstr, FIRST, val);
+Boolean::Boolean(bool val, bool br) :Exp(val), data(){
+    if(br) {
+        auto nextInstr = CodeBuffer::instance().emit(br_uncond("@"));
+        data.add(nextInstr, FIRST, val);
+        is_raw=false;
+    }
 
 }
 
@@ -150,11 +153,13 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
     for(auto a:el->exp_list){
         str_args.emplace_back(a->exp->get(true));
     }
-    this->reg=RegisterManager::instance().alloc(32);
     if(st->get_func_type(id)->RetType->name()=="VOID")
         CodeBuffer::instance().emit(call_void(t->reg_type(), id->name(), str_args));
-    else
-        CodeBuffer::instance().emit(call(this->reg->name(), t->reg_type(), id->name(), str_args));
+    else {
+        CodeBuffer::instance().emit(
+                call(this->reg->name(), t->reg_type(), id->name(), str_args));
+        this->reg = RegisterManager::instance().alloc(32);
+    }
 }
 
 void ExpList::add(STYPE *e) {

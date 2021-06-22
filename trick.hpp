@@ -7,6 +7,7 @@
 #include "bp.hpp"
 #include <vector>
 #include <string>
+#include "SymbolTable.hpp"
 
 #endif //HW5_TRICK_H
 
@@ -15,6 +16,7 @@ class Scope;
 class MarkerN;
 class MarkerM;
 class CaseList;
+class MarkerAssign;
 
 struct Statement: public STYPE{
     vector<pair<int,BranchLabelIndex>> nextList;
@@ -24,8 +26,9 @@ struct Statement: public STYPE{
     Statement(IfStatement *ifst, MarkerN* n, Scope* m);
     Statement(MarkerM* m1, STYPE* b, MarkerM* m2, Statement* s);
     Statement(Exp* e, MarkerN* n, CaseList* cl); // switch
+    Statement(MarkerAssign* m, Exp* e); // assign
     void merge(Statement * s){
-        nextList=CodeBuffer::merge(nextList, s->nextList);
+        //nextList=CodeBuffer::merge(nextList, s->nextList);
         breakList=CodeBuffer::merge(breakList, s->breakList);
     }
 //    explicit Statement(int next_label, BranchLabelIndex idx){
@@ -78,10 +81,8 @@ struct CaseDecl : public Statement{
     Statement* s;
     Num* num;
     CaseDecl(MarkerM* m, Statement* s, Num* num=nullptr):m(m), s(s), num(num){
-        if(!num) {
-            auto br = CodeBuffer::instance().emit(br_uncond("@"));
-            nextList = CodeBuffer::makelist(pii(br, FIRST));
-        }
+        auto br = CodeBuffer::instance().emit(br_uncond("@"));
+        nextList = CodeBuffer::makelist(pii(br, FIRST));
         merge(s);
     }
 };
@@ -90,11 +91,42 @@ struct CaseList : public Statement{
     vector<CaseDecl*> cl;
     explicit CaseList(CaseDecl* c){
         cl.insert(cl.begin(), c);
-        nextList = c->nextList;
+        merge(c);
     };
     CaseList(CaseDecl* c, CaseList* cl1):cl(cl1->cl) {
         cl.insert(cl.begin(), c);
         merge(c);
         merge(cl1);
+    }
+};
+
+struct MarkerAssign : public Statement{
+    bool is_b;
+    string label;
+    Id* id;
+    explicit MarkerAssign(Id* id):id(id){
+        if(id) {
+            auto arg = SymbolTable::GetInstance()->get_id_arg(id);
+            is_b = dynamic_cast<Boolean *>(arg->var->exp) != nullptr;
+        }
+        if(is_b){
+            auto& cb = CodeBuffer::instance();
+            int br;
+            br = cb.emit(br_uncond("@"));
+            label = cb.genLabel();
+            cb.bpatch(CodeBuffer::makelist(pii(br,FIRST)), label);
+        }
+    }
+    explicit MarkerAssign(Type* t, Id* id):id(id){
+        if(t) {
+            is_b = t->name()=="BOOL";
+        }
+        if(is_b){
+            auto& cb = CodeBuffer::instance();
+            int br;
+            br = cb.emit(br_uncond("@"));
+            label = cb.genLabel();
+            cb.bpatch(CodeBuffer::makelist(pii(br,FIRST)), label);
+        }
     }
 };

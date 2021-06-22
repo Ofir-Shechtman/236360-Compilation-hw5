@@ -78,25 +78,46 @@ Statement::Statement(Exp* e, MarkerN* n, CaseList* cl) {
             next_label = CodeBuffer::instance().genLabel();
             nextList = CodeBuffer::merge(nextList, cl->cl[i]->nextList);
         }
-//        else if(i!=cl->cl.size()-1) {//last no default
-//            auto reg=RegisterManager::instance().alloc(1);
-//            CodeBuffer::instance().emit(get_binop(reg->name(), "eq", e->get(), cl->cl[i]->num->get()));
-//            auto last = CodeBuffer::instance().emit(br_cond(reg->full_name(), cl->cl[i]->m->label, "@"));
-//            nextList = CodeBuffer::merge(nextList, CodeBuffer::makelist(pii(last, SECOND)));
-//        }
-
 
         else{
             auto reg=RegisterManager::instance().alloc(1);
-            CodeBuffer::instance().emit(get_binop(reg->name(), "eq", e->get(), cl->cl[i]->num->get()));
+            CodeBuffer::instance().emit(get_binop(reg->name(), "icmp eq", e->get(), cl->cl[i]->num->get(false)));
             auto next_cmd = CodeBuffer::instance().emit(br_cond(reg->full_name(), cl->cl[i]->m->label,"@"));
             next_label = CodeBuffer::instance().genLabel();
             CodeBuffer::instance().bpatch(CodeBuffer::makelist(pii(next_cmd, SECOND)), next_label);
+            if(i<cl->cl.size()-1)
+                CodeBuffer::instance().bpatch(cl->cl[i]->nextList, cl->cl[i+1]->m->label);
+            else
+                nextList = CodeBuffer::merge(nextList, cl->cl[i]->nextList);
             nextList = CodeBuffer::merge(nextList, cl->cl[i]->breakList);
         }
 
     }
     CodeBuffer::instance().bpatch(nextList, next_label);
+}
+
+Statement::Statement(MarkerAssign *m, Exp *e) {
+    auto b = dynamic_cast<Boolean*>(e);
+    if(!b) return;
+    auto& cb = CodeBuffer::instance();
+    //is true
+    auto true_label =  CodeBuffer::instance().genLabel();
+    cb.bpatch(b->data.trueList, true_label);
+    SymbolTable::GetInstance()->assign(m->id, new Boolean(true, false));
+    auto after_true = CodeBuffer::instance().emit(br_uncond("@"));
+    nextList = CodeBuffer::makelist(pii(after_true, FIRST));
+
+    //is false
+    auto false_label =  CodeBuffer::instance().genLabel();
+    cb.bpatch(b->data.falseList, false_label);
+    SymbolTable::GetInstance()->assign(m->id, new Boolean(false, false));
+    auto after_false = CodeBuffer::instance().emit(br_uncond("@"));
+    nextList =  CodeBuffer::merge(nextList, CodeBuffer::makelist(pii(after_false, FIRST)));
+
+    //after all
+    cb.bpatch(nextList, cb.genLabel());
+
+
 }
 
 
