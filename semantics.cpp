@@ -274,7 +274,7 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     //if(ev1->type()->name()!=ev2->type()->name())
     //    output::errorMismatch(yylineno);
     Exp *exp = nullptr;
-    if(ev1->type()->name()=="INT")
+    if(ev1->type()->name()=="INT" || ev2->type()->name()=="INT")
         exp = new Num("0");
     else if(ev1->type()->name()=="BYTE")
         exp = new NumB("0");
@@ -319,9 +319,15 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     exp->reg=RegisterManager::instance().alloc(32);
     CodeBuffer::instance().emit(get_binop(exp->reg->name(), arith, ev1->get(), ev2->get(false)));
     if(exp->type()->name()=="BYTE"){
-        //<result> = shl i32 4, 2
         auto new_reg=RegisterManager::instance().alloc(32);
         CodeBuffer::instance().emit(get_binop(new_reg->name(), "and", exp->reg->full_name(), "255"));
+        //%scale2 = trunc i32 %scale to i8
+//        CodeBuffer::instance().emit(new_reg->name()+" = trunc i32 " + exp->reg->name()+" to i8");
+//        exp->reg=new_reg;
+//
+//        //%X = zext i32 257 to i64
+//        new_reg=RegisterManager::instance().alloc(32);
+//        CodeBuffer::instance().emit(new_reg->name()+" = zext i8 " + exp->reg->name()+" to i32");
         exp->reg=new_reg;
 
 

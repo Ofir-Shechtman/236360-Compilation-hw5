@@ -290,6 +290,7 @@ void Id::run_bool_check(){
     auto b = dynamic_cast<Boolean*>(arg->var->exp);
     if(b){
         auto nextInstr = CodeBuffer::instance().emit(br_cond(arg->var->id->get()));
+        arg->var->exp->reg= nullptr;
         b->data.add(nextInstr, FIRST, true);
         b->data.add(nextInstr, SECOND, false);
     }
