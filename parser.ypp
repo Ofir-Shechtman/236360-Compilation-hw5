@@ -52,8 +52,8 @@ Statements : Statement {$$ = new Statement(); dynamic_cast<Statement *>($$)->mer
 
 Statement : LBRACE Scope RBRACE {$$ = new Statement(); dynamic_cast<Statement *>($$)->merge(dynamic_cast<Statement *>($2));}
         | Type NEWID SC {SymbolTable::GetInstance()->add_var(new Variable($1, $2)); } {$$ = new Statement();}
-        | Type NEWID ASSIGN {$$=new MarkerAssign(dynamic_cast<Type*>($1), dynamic_cast<Id*>($2)); SymbolTable::GetInstance()->add_var(new Variable($1, $2));} Exp SC {SymbolTable::GetInstance()->assign($2,$5);} {$$ = new Statement(dynamic_cast<MarkerAssign *>($4), dynamic_cast<Exp *>($5));}
-        | NEWID ASSIGN {$$=new MarkerAssign(dynamic_cast<Id*>($1));} Exp SC {SymbolTable::GetInstance()->assign($1,$4);} {$$ = new Statement(dynamic_cast<MarkerAssign *>($3), dynamic_cast<Exp *>($4));}
+        | Type LVAL_ID ASSIGN {$$=new MarkerAssign(dynamic_cast<Type*>($1), dynamic_cast<Id*>($2)); SymbolTable::GetInstance()->add_var(new Variable($1, $2));} Exp SC {SymbolTable::GetInstance()->assign($2,$5);} {$$ = new Statement(dynamic_cast<MarkerAssign *>($4), dynamic_cast<Exp *>($5));}
+        | LVAL_ID ASSIGN {$$=new MarkerAssign(dynamic_cast<Id*>($1));} Exp SC {SymbolTable::GetInstance()->assign($1,$4);} {$$ = new Statement(dynamic_cast<MarkerAssign *>($3), dynamic_cast<Exp *>($4));}
         | Call SC {} {$$ = new Statement();}
         | RETURN SC {SymbolTable::GetInstance()->check_return(new Void());} {$$ = new Statement();}
         | RETURN Exp SC {SymbolTable::GetInstance()->check_return($2);} {$$ = new Statement();}
@@ -110,8 +110,10 @@ CaseList : CaseDecl CaseList {$$ = new CaseList(dynamic_cast<CaseDecl *>($1), dy
 
 CaseDecl : CASE NUM COLON M Statements {$$ = new CaseDecl(dynamic_cast<MarkerM *>($4), dynamic_cast<Statement *>($5), dynamic_cast<Num *>($2));}
 
-NEWID : ID
+LVAL_ID : ID
       | B {$$=new Id(yytext);}
+
+NEWID : LVAL_ID {$$=$1; dynamic_cast<Id *>($$)->run_bool_check();}
 
 %%
 

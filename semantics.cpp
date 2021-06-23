@@ -64,12 +64,17 @@ Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2) {
 Boolean::Boolean(STYPE *e) {//not
     is_raw=false;
     if(is_bool(e)) {
-        auto temp = data.falseList;
-        data.falseList = data.trueList;
+        auto id=dynamic_cast<Id*>(e);
+        if(id)
+            e=SymbolTable::GetInstance()->get_id_arg(id)->var->exp;
+        auto b = dynamic_cast<Boolean*>(e);
+        auto temp = b->data.falseList;
+        data.falseList = b->data.trueList;
         data.trueList = temp;
 
     }
-    output::errorMismatch(yylineno);
+    else
+        output::errorMismatch(yylineno);
 }
 
 Boolean::Boolean(bool val, bool br) :Exp(val), data(){
@@ -121,7 +126,7 @@ bool is_type(STYPE* e, string type) {
         return false;
     auto id=dynamic_cast<Id*>(e);
     if(id)
-        exp=id;
+        exp=SymbolTable::GetInstance()->get_id_arg(id)->var->exp;
     auto t=exp->type()->name();
     return t==type;
 }
@@ -256,12 +261,23 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     if(!binop)
         output::errorMismatch(yylineno);
     string arith;
-    auto v1 = exp->val, v2 = exp->val;
+    auto v1 = ev1->val, v2 = ev2->val;
     if(binop->op=="/"){
-        if(v2==0) {
-            output::errorDivisionByZero();
-        }
-        exp->val=v1/v2;
+//        if(v2==0) {
+//            output::errorDivisionByZero();
+//        }
+        auto& cb = CodeBuffer::instance();
+        auto is_zero=RegisterManager::instance().alloc(1);
+        cb.emit(get_binop(is_zero->name(), "icmp eq", ev2->get(), "0"));
+        auto cmp=cb.emit(br_cond(is_zero->full_name()));
+        auto raise_lbl = cb.genLabel();
+        cb.emit(call_void("void","errorDivisionByZero"));
+        auto after = cb.emit(br_uncond());
+        auto next_label = cb.genLabel();
+        cb.bpatch(CodeBuffer::makelist(pii(after, FIRST)), next_label);
+        cb.bpatch(CodeBuffer::makelist(pii(cmp, SECOND)), next_label);
+        cb.bpatch(CodeBuffer::makelist(pii(cmp, FIRST)), raise_lbl);
+        //exp->val=v1/v2;
         arith = "sdiv";
     }
     else if(binop->op=="*") {
@@ -303,8 +319,10 @@ string Id::get(bool full_const) const {
         string ptr_name = "%ptr" + to_string(arg->offset);
         CodeBuffer::instance().emit(load(reg->name(), reg->type(), ptr_name));
     }
-
-    return arg->var->exp->reg->full_name();
+    if(full_const)
+        return arg->var->exp->reg->full_name();
+    else
+        return arg->var->exp->reg->name();
 }
 Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type *>(type)),
                                                          id(dynamic_cast<Id *>(id)),

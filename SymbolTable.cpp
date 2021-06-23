@@ -13,14 +13,14 @@ SymbolTable *SymbolTable::GetInstance() {
 
 SymbolTable::SymbolTable() {
     auto fl1= new FormalsList();
-    fl1->add(new Variable(new TypeString(), new Id("arg", false)));
+    fl1->add(new Variable(new TypeString(), new Id("arg")));
     Func* f1= new Func(new Void(), fl1);
-    auto* v1 = new Variable(f1, new Id("print", false));
+    auto* v1 = new Variable(f1, new Id("print"));
 
     auto fl2= new FormalsList();
-    fl2->add(new Variable(new Int(), new Id("arg", false)));
+    fl2->add(new Variable(new Int(), new Id("arg")));
     Func* f2= new Func(new Void(), fl2);
-    auto* v2 = new Variable(f2, new Id("printi", false));
+    auto* v2 = new Variable(f2, new Id("printi"));
 
     funcs={new Arg(v1, 0), new Arg(v2, 0)};
     tables_stack.emplace_back(funcs);
@@ -138,6 +138,8 @@ void SymbolTable::add_var(Variable *v, int offset) {
     if(new_arg->offset>=0) {
         auto& exp = new_arg->var->exp;
         CodeBuffer::instance().emit(get_alloca(new_arg->ptr_name(), new_arg->var->type->reg_type() ,new_arg->var->id->name()));
+        CodeBuffer::instance().emit(store(new_arg->var->type->reg_type()+" 0",new_arg->var->type->reg_type() ,new_arg->ptr_name()));
+
     }
 
 }
@@ -154,7 +156,7 @@ Type *SymbolTable::get_id_type(const Id *id) const {
 }
 
 bool SymbolTable::contain_var(const string &name) const {
-    auto id = Id(name, false);
+    auto id = Id(name);
     auto t = get_id_type(&id);
     return t != nullptr;
 }
@@ -168,13 +170,13 @@ Func *SymbolTable::get_func_type(const Id *id) const {
 }
 
 bool SymbolTable::contain_func(const string &name) const {
-    auto id = Id(name, false);
+    auto id = Id(name);
     auto t = get_func_type(&id);
 
     return t != nullptr;
 }
 
-void SymbolTable::assign(STYPE *id_st, STYPE *exp_st) {
+void SymbolTable::assign(STYPE *id_st, STYPE *exp_st, bool skip_bool) {
     Id* id = dynamic_cast<Id *>(id_st);
     Type* exp_type = dynamic_cast<Exp *>(exp_st)->type();
     if(!contain_var(id->name()))
@@ -188,8 +190,12 @@ void SymbolTable::assign(STYPE *id_st, STYPE *exp_st) {
         return;
         //output::errorSyn(yylineno);
     }
-    CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),arg->var->type->reg_type() ,arg->ptr_name()));
-    arg->var->exp->reg= nullptr;
+    if(!skip_bool || arg->var->type->name()!="BOOL") {
+        CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),
+                                          arg->var->type->reg_type(),
+                                          arg->ptr_name()));
+        arg->var->exp->reg = nullptr;
+    }
 
 
 }
@@ -258,8 +264,10 @@ Type *Id::type() const {
 
 }
 
-Id::Id(const string val, bool bool_check) : id_name(val){
-    if(!bool_check) return;
+Id::Id(const string val) : id_name(val){}
+
+
+void Id::run_bool_check(){
     auto arg = SymbolTable::GetInstance()->get_id_arg(this);
     if(!arg) return;
     auto b = dynamic_cast<Boolean*>(arg->var->exp);

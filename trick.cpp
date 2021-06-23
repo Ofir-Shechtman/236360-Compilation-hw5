@@ -13,7 +13,8 @@ Statement::Statement(IfStatement *ifst) {
     auto last_goto = CodeBuffer::instance().emit(br_uncond("@"));
     nextList = CodeBuffer::makelist(pii(last_goto, FIRST));
     cb.bpatch(b->data.trueList, m->label);
-    auto temp = CodeBuffer::merge(b->data.falseList, s->nextList);
+    merge(s);
+    auto temp = CodeBuffer::merge(b->data.falseList, nextList);
     nextList= CodeBuffer::merge(nextList, temp);
     cb.bpatch(nextList, cb.genLabel());
 
@@ -41,8 +42,9 @@ Statement::Statement(IfStatement *ifst, MarkerN* n, Scope *s) {
 Statement::Statement(MarkerM * m1, STYPE * sb, MarkerM * m2, Statement* s) {
     auto b= dynamic_cast<Boolean*>(sb);
     auto& cb = CodeBuffer::instance();
-    nextList =CodeBuffer::merge(s->nextList, nextList);
+    merge(s);
     cb.bpatch(nextList, m1->label);
+    cb.bpatch(continueList, m1->label);
     cb.bpatch( b->data.trueList, m2->label);
     nextList = b->data.falseList;
     CodeBuffer::instance().emit(br_uncond(m1->label));
@@ -64,7 +66,7 @@ Statement::Statement(int type) {
     else if(type == 2) {//continue
         auto& cb = CodeBuffer::instance();
         auto br = cb.emit(br_uncond("@"));
-        nextList = CodeBuffer::makelist(pii(br,FIRST));
+        continueList = CodeBuffer::makelist(pii(br,FIRST));
     }
 }
 
@@ -103,14 +105,14 @@ Statement::Statement(MarkerAssign *m, Exp *e) {
     //is true
     auto true_label =  CodeBuffer::instance().genLabel();
     cb.bpatch(b->data.trueList, true_label);
-    SymbolTable::GetInstance()->assign(m->id, new Boolean(true, false));
+    SymbolTable::GetInstance()->assign(m->id, new Boolean(true, false), false);
     auto after_true = CodeBuffer::instance().emit(br_uncond("@"));
     nextList = CodeBuffer::makelist(pii(after_true, FIRST));
 
     //is false
     auto false_label =  CodeBuffer::instance().genLabel();
     cb.bpatch(b->data.falseList, false_label);
-    SymbolTable::GetInstance()->assign(m->id, new Boolean(false, false));
+    SymbolTable::GetInstance()->assign(m->id, new Boolean(false, false), false);
     auto after_false = CodeBuffer::instance().emit(br_uncond("@"));
     nextList =  CodeBuffer::merge(nextList, CodeBuffer::makelist(pii(after_false, FIRST)));
 
@@ -123,10 +125,18 @@ Statement::Statement(MarkerAssign *m, Exp *e) {
 
 Boolean::Boolean(STYPE *e1, STYPE *sop, STYPE *sm, STYPE *e2) {
     is_raw=false;
+    auto id1=dynamic_cast<Id*>(e1);
+    if(id1)
+        e1=SymbolTable::GetInstance()->get_id_arg(id1)->var->exp;
+    auto id2=dynamic_cast<Id*>(e2);
+    if(id2)
+        e2=SymbolTable::GetInstance()->get_id_arg(id2)->var->exp;
     auto b1 = dynamic_cast<Boolean *>(e1);
     auto op = dynamic_cast<OP *>(sop);
     auto b2 = dynamic_cast<Boolean *>(e2);
     auto m = dynamic_cast<MarkerM *>(sm);
+
+
 
     if (b1 && op && b2 && m) {
         auto &cb = CodeBuffer::instance();

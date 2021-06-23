@@ -21,15 +21,17 @@ class MarkerAssign;
 struct Statement: public STYPE{
     vector<pair<int,BranchLabelIndex>> nextList;
     vector<pair<int,BranchLabelIndex>> breakList;
+    vector<pair<int,BranchLabelIndex>> continueList;
     Statement(int type=0);
     explicit Statement(IfStatement *ifst);
     Statement(IfStatement *ifst, MarkerN* n, Scope* m);
-    Statement(MarkerM* m1, STYPE* b, MarkerM* m2, Statement* s);
+    Statement(MarkerM* m1, STYPE* b, MarkerM* m2, Statement* s); //while
     Statement(Exp* e, MarkerN* n, CaseList* cl); // switch
     Statement(MarkerAssign* m, Exp* e); // assign
     void merge(Statement * s){
         //nextList=CodeBuffer::merge(nextList, s->nextList);
         breakList=CodeBuffer::merge(breakList, s->breakList);
+        continueList=CodeBuffer::merge(continueList, s->continueList);
     }
 //    explicit Statement(int next_label, BranchLabelIndex idx){
 //        pair<int,BranchLabelIndex> item(next_label, idx);
@@ -60,16 +62,19 @@ struct MarkerN: public STYPE{
 };
 
 
-struct Scope: public STYPE{
+struct Scope: public Statement{
     Statement* s;
     MarkerM* m;
-    Scope(STYPE* m, STYPE* s):s(dynamic_cast<Statement*>(s)), m(dynamic_cast<MarkerM*>(m)){}
+    Scope(STYPE* m, STYPE* s):s(dynamic_cast<Statement*>(s)), m(dynamic_cast<MarkerM*>(m)) {
+        merge(this->s);
+    }
 };
 
-struct IfStatement: public STYPE{
+struct IfStatement: public Statement{
     Boolean* b;
     Scope* s;
     IfStatement(STYPE* e, STYPE* s):b(dynamic_cast<Boolean*>(e)), s(dynamic_cast<Scope*>(s)){
+        merge(this->s->s);
         if(!b)
             b= dynamic_cast<Boolean*>(SymbolTable::GetInstance()->get_id_arg(dynamic_cast<Id*>(e))->var->exp);
     }

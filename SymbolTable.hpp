@@ -60,7 +60,7 @@ public:
 
     bool contain_func(const string& name) const;
 
-    void assign(STYPE* id_st, STYPE* exp_st);
+    void assign(STYPE* id_st, STYPE* exp_st, bool skip_bool= true);
 
     void check_return(STYPE* t);
 

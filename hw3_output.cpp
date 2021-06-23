@@ -97,8 +97,3 @@ void output::errorByteTooLarge(int lineno, const string& value) {
     exit(1);
 }
 
-void output::errorDivisionByZero() {
-    cout << "Error division by zero" << endl;
-    exit(1);
-}
-//Error division by zero"
