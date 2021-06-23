@@ -131,6 +131,12 @@ Boolean::Boolean(STYPE *e1, STYPE *sop, STYPE *sm, STYPE *e2) {
     auto id2=dynamic_cast<Id*>(e2);
     if(id2)
         e2=SymbolTable::GetInstance()->get_id_arg(id2)->var->exp;
+    auto c1=dynamic_cast<Call*>(e1);
+    if(c1)
+        e1=c1->e;
+    auto c2=dynamic_cast<Call*>(e2);
+    if(c2)
+        e2=c2->e;
     auto b1 = dynamic_cast<Boolean *>(e1);
     auto op = dynamic_cast<OP *>(sop);
     auto b2 = dynamic_cast<Boolean *>(e2);

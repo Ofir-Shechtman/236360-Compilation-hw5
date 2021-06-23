@@ -215,7 +215,24 @@ void SymbolTable::check_return(STYPE *t) {
         if(ret_type->name()!=cur_return->name() && !(cur_return->name()=="INT" && ret_type->name()=="BYTE"))
             output::errorMismatch(yylineno);
         auto e = dynamic_cast<Exp *>(t);
-        CodeBuffer::instance().emit(ret( e->get()));
+        auto b = dynamic_cast<Boolean*>(e);
+        if(b){
+            auto& cb = CodeBuffer::instance();
+            auto true_label = cb.genLabel();
+            cb.emit(ret("i1 1"));
+            //auto next_list = CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST));
+
+            auto false_label = cb.genLabel();
+            cb.emit(ret("i1 0"));
+            //next_list = CodeBuffer::merge(next_list, CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST)));
+
+            //cb.bpatch(next_list, cb.genLabel());
+            cb.bpatch(b->data.trueList, true_label);
+            cb.bpatch(b->data.falseList, false_label);
+
+        }
+        else
+            CodeBuffer::instance().emit(ret( e->get()));
     }
 
 }
@@ -272,7 +289,7 @@ void Id::run_bool_check(){
     if(!arg) return;
     auto b = dynamic_cast<Boolean*>(arg->var->exp);
     if(b){
-        auto nextInstr = CodeBuffer::instance().emit(br_cond(b->get()));
+        auto nextInstr = CodeBuffer::instance().emit(br_cond(arg->var->id->get()));
         b->data.add(nextInstr, FIRST, true);
         b->data.add(nextInstr, SECOND, false);
     }

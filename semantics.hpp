@@ -206,8 +206,10 @@ struct Arg{
 class Call : public Exp{
     Type* t;
 public:
+    Exp* e;
     explicit Call(STYPE* id_st, STYPE* el_st=new ExpList());
     Type* type() const override;
+    string get(bool full_const=true) const override{return e->get(full_const);}
 };
 
 #endif //HW5_Semantic_H

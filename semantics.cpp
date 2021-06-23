@@ -68,6 +68,8 @@ Boolean::Boolean(STYPE *e) {//not
         if(id)
             e=SymbolTable::GetInstance()->get_id_arg(id)->var->exp;
         auto b = dynamic_cast<Boolean*>(e);
+        if(!b)
+            b=dynamic_cast<Boolean*>(dynamic_cast<Call*>(e)->e);
         auto temp = b->data.falseList;
         data.falseList = b->data.trueList;
         data.trueList = temp;
@@ -127,7 +129,11 @@ bool is_type(STYPE* e, string type) {
     auto id=dynamic_cast<Id*>(e);
     if(id)
         exp=SymbolTable::GetInstance()->get_id_arg(id)->var->exp;
-    auto t=exp->type()->name();
+    string t;
+    if(exp)
+        t=exp->type()->name();
+    else
+        t=dynamic_cast<Call*>(e)->type()->name();
     return t==type;
 }
 
@@ -178,9 +184,24 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
     if(st->get_func_type(id)->RetType->name()=="VOID")
         CodeBuffer::instance().emit(call_void(t->reg_type(), id->name(), str_args));
     else {
-        this->reg = RegisterManager::instance().alloc(32);
+
+        if(t->name()=="INT")
+            e = new Num("0");
+        else if(t->name()=="BYTE")
+            e = new NumB("0");
+        else if(t->name()=="BOOL")
+            e = new Boolean(false, false);
+
+        e->reg = RegisterManager::instance().alloc(t->name()=="BOOL" ? 1 :32);
         CodeBuffer::instance().emit(
-                call(this->reg->name(), t->reg_type(), id->name(), str_args));
+                call(e->reg->name(), t->reg_type(), id->name(), str_args));
+
+        auto b = dynamic_cast<Boolean*>(e);
+        if(b){
+            auto nextInstr = CodeBuffer::instance().emit(br_cond(b->get()));
+            b->data.add(nextInstr, FIRST, true);
+            b->data.add(nextInstr, SECOND, false);
+        }
     }
 }
 
@@ -348,7 +369,7 @@ ExpType::ExpType(Exp *e) :type(e->type()), exp(e){
         auto false_label = cb.genLabel();
         next_list = CodeBuffer::merge(next_list, CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST)));
         cb.instance().bpatch(b->data.falseList, false_label);
-        pair<string, string> p1("i1 1", true_label),p2("i1 0", false_label);
+        pair<string, string> p1("1", "%"+true_label),p2("0", "%"+false_label);
         vector<pair<string, string>> pairs = {p1, p2};
         exp->reg = RegisterManager::instance().alloc(1);
         auto phi_ = cb.genLabel();

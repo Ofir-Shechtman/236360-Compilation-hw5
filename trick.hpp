@@ -75,8 +75,13 @@ struct IfStatement: public Statement{
     Scope* s;
     IfStatement(STYPE* e, STYPE* s):b(dynamic_cast<Boolean*>(e)), s(dynamic_cast<Scope*>(s)){
         merge(this->s->s);
-        if(!b)
-            b= dynamic_cast<Boolean*>(SymbolTable::GetInstance()->get_id_arg(dynamic_cast<Id*>(e))->var->exp);
+        if(!b) {
+            auto id = dynamic_cast<Id*>(e);
+            if(id)
+                b = dynamic_cast<Boolean *>(SymbolTable::GetInstance()->get_id_arg(id)->var->exp);
+            else
+                b=dynamic_cast<Boolean *>(dynamic_cast<Call *>(e)->e);
+        }
     }
 };
 

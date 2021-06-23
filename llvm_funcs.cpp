@@ -83,7 +83,7 @@ string br_cond(const string& reg_name, string label_true,
 string phi(const string &ptr, const string& type, vector<pair<string, string>> pairs) {
     //%to_print = phi i8* [%even_str, %even_label], [%odd_str, %odd_label]
     stringstream res;
-    res<<"\t"<<ptr << " = phi " << type << "* ";
+    res<<"\t"<<ptr << " = phi " << type << " ";
     for (int i = 0; i < pairs.size(); ++i) {
         //[%odd_str, %odd_label],
         res << "["<< pairs[i].first << ", " << pairs[i].second <<"]";
