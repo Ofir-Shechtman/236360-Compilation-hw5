@@ -172,18 +172,10 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
     }
 }
 
-void ExpList::add(STYPE *e) {
-    auto exp = dynamic_cast<Exp *>(e);
+void ExpList::add(ExpType *et) {
+    auto exp = et->exp;
     if(!exp)
         output::errorSyn(yylineno);
-    if(exp->type()->name()=="BOOL" && !exp->is_raw) {
-        output::errorSyn(yylineno);
-//        exp->reg = RegisterManager::instance().alloc(1);
-//        CodeBuffer::instance().emit(get_binop(exp->reg->name(), "add", exp->get(),
-//                          (new Boolean(exp->val, false))->get()));
-    }
-    Type* t =  exp->type();
-    auto et = new ExpType(t, exp);
     exp_list.insert(exp_list.begin(), et);
 }
 
@@ -317,4 +309,23 @@ Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type 
             this->exp = new Boolean();
     }
 
+}
+
+ExpType::ExpType(Exp *e) :type(e->type()), exp(e){
+    if(exp->type()->name()=="BOOL" && !exp->is_raw) {
+        auto b = dynamic_cast<Boolean *>(exp);
+        auto& cb = CodeBuffer::instance();
+        auto true_label = cb.genLabel();
+        auto next_list = CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST));
+        cb.instance().bpatch(b->data.trueList, true_label);
+        auto false_label = cb.genLabel();
+        next_list = CodeBuffer::merge(next_list, CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST)));
+        cb.instance().bpatch(b->data.falseList, false_label);
+        pair<string, string> p1("i1 1", true_label),p2("i1 0", false_label);
+        vector<pair<string, string>> pairs = {p1, p2};
+        exp->reg = RegisterManager::instance().alloc(1);
+        auto phi_ = cb.genLabel();
+        cb.emit((phi(exp->reg->name(), "i1", pairs)));
+        cb.bpatch(next_list, phi_);
+    }
 }

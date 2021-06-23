@@ -143,10 +143,10 @@ public:
     Variable(STYPE *type, STYPE *id, STYPE* exp=nullptr);
 };
 
-struct ExpType{
+struct ExpType : public STYPE{
     Type* type;
     Exp* exp;
-    ExpType(Type* t, Exp* e):type(t), exp(e){};
+    ExpType(Exp* e);;
 };
 
 class ExpList : public STYPE{
@@ -154,7 +154,8 @@ class ExpList : public STYPE{
 public:
     vector<ExpType*> exp_list;
     ExpList()=default;
-    void add(STYPE* e);;
+    void add(ExpType* e);
+    void add(STYPE* e){add(dynamic_cast<ExpType*>(e));}
 };
 
 

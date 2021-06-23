@@ -111,8 +111,7 @@ struct MarkerAssign : public Statement{
         }
         if(is_b){
             auto& cb = CodeBuffer::instance();
-            int br;
-            br = cb.emit(br_uncond("@"));
+            int br = cb.emit(br_uncond("@"));
             label = cb.genLabel();
             cb.bpatch(CodeBuffer::makelist(pii(br,FIRST)), label);
         }
@@ -123,8 +122,7 @@ struct MarkerAssign : public Statement{
         }
         if(is_b){
             auto& cb = CodeBuffer::instance();
-            int br;
-            br = cb.emit(br_uncond("@"));
+            int br = cb.emit(br_uncond("@"));
             label = cb.genLabel();
             cb.bpatch(CodeBuffer::makelist(pii(br,FIRST)), label);
         }
