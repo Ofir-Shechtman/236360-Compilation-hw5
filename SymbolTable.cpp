@@ -13,14 +13,14 @@ SymbolTable *SymbolTable::GetInstance() {
 
 SymbolTable::SymbolTable() {
     auto fl1= new FormalsList();
-    fl1->add(new Variable(new TypeString(), new Id("arg")));
+    fl1->add(new Variable(new TypeString(), new Id("arg", false)));
     Func* f1= new Func(new Void(), fl1);
-    auto* v1 = new Variable(f1, new Id("print"));
+    auto* v1 = new Variable(f1, new Id("print", false));
 
     auto fl2= new FormalsList();
-    fl2->add(new Variable(new Int(), new Id("arg")));
+    fl2->add(new Variable(new Int(), new Id("arg", false)));
     Func* f2= new Func(new Void(), fl2);
-    auto* v2 = new Variable(f2, new Id("printi"));
+    auto* v2 = new Variable(f2, new Id("printi", false));
 
     funcs={new Arg(v1, 0), new Arg(v2, 0)};
     tables_stack.emplace_back(funcs);
@@ -101,14 +101,32 @@ void SymbolTable::add_Func(Variable *f) {
         args_type.emplace_back(a->type->reg_type());
     }
     CodeBuffer::instance().emit(define(f->id->name(), args_type, dynamic_cast<Func *>(f->type)->RetType->reg_type()));
-    for(auto a:args){
-        auto b = dynamic_cast<Boolean*>(a->exp);
-        if(b){
-            auto nextInstr = CodeBuffer::instance().emit(br_cond(b->get()));
-            b->data.add(nextInstr, FIRST, true);
-            b->data.add(nextInstr, SECOND, false);
-        }
-    }
+//    for(auto a:args){
+//        auto b = dynamic_cast<Boolean*>(a->exp);
+//        if(b){
+//            auto nextInstr = CodeBuffer::instance().emit(br_cond(b->get()));
+//            b->data.add(nextInstr, FIRST, true);
+//            b->data.add(nextInstr, SECOND, false);
+// //////////////////////////////////////////////////////
+//            auto& cb = CodeBuffer::instance();
+//            auto nextInstr = cb.emit(br_cond(b->get()));
+//
+//            auto true_label = cb.genLabel();
+//            cb.bpatch(CodeBuffer::makelist(pii(nextInstr, FIRST)), true_label);
+//            auto next_list = CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST));
+//
+//            auto false_label = cb.genLabel();
+//            cb.bpatch(CodeBuffer::makelist(pii(nextInstr, SECOND)), false_label);
+//            next_list = CodeBuffer::merge(next_list, CodeBuffer::makelist(pii(cb.emit(br_uncond()), FIRST)));
+//
+//            pair<string, string> p1("i1 1", true_label),p2("i1 0", false_label);
+//            vector<pair<string, string>> pairs = {p1, p2};
+//            b->reg = RegisterManager::instance().alloc(1);
+//            auto phi_ = cb.genLabel();
+//            cb.emit((phi(b->reg->name(), "i1", pairs)));
+//            cb.bpatch(next_list, phi_);
+//        }
+//    }
 
 }
 
@@ -136,7 +154,7 @@ Type *SymbolTable::get_id_type(const Id *id) const {
 }
 
 bool SymbolTable::contain_var(const string &name) const {
-    auto id = Id(name);
+    auto id = Id(name, false);
     auto t = get_id_type(&id);
     return t != nullptr;
 }
@@ -150,7 +168,7 @@ Func *SymbolTable::get_func_type(const Id *id) const {
 }
 
 bool SymbolTable::contain_func(const string &name) const {
-    auto id = Id(name);
+    auto id = Id(name, false);
     auto t = get_func_type(&id);
 
     return t != nullptr;
@@ -238,4 +256,16 @@ Type *Id::type() const {
         output::errorUndef(yylineno, name());
     return st.get_id_type(this);
 
+}
+
+Id::Id(const string val, bool bool_check) : id_name(val){
+    if(!bool_check) return;
+    auto arg = SymbolTable::GetInstance()->get_id_arg(this);
+    if(!arg) return;
+    auto b = dynamic_cast<Boolean*>(arg->var->exp);
+    if(b){
+        auto nextInstr = CodeBuffer::instance().emit(br_cond(b->get()));
+        b->data.add(nextInstr, FIRST, true);
+        b->data.add(nextInstr, SECOND, false);
+    }
 }

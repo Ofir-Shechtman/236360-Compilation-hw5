@@ -303,6 +303,7 @@ string Id::get(bool full_const) const {
         string ptr_name = "%ptr" + to_string(arg->offset);
         CodeBuffer::instance().emit(load(reg->name(), reg->type(), ptr_name));
     }
+
     return arg->var->exp->reg->full_name();
 }
 Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type *>(type)),

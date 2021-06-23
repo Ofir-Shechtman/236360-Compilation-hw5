@@ -52,7 +52,7 @@ Exp* binop(STYPE* e1, STYPE* op, STYPE* e2);
 class Id : public Exp{
     string id_name;
 public:
-    explicit Id(const string val) : id_name(val){};
+    explicit Id(const string val, bool bool_check=true);;
     string name() const{return id_name;}
     Type* type() const override;
     string get(bool full_const=true) const override;
