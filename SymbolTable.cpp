@@ -101,6 +101,14 @@ void SymbolTable::add_Func(Variable *f) {
         args_type.emplace_back(a->type->reg_type());
     }
     CodeBuffer::instance().emit(define(f->id->name(), args_type, dynamic_cast<Func *>(f->type)->RetType->reg_type()));
+    for(auto a:args){
+        auto b = dynamic_cast<Boolean*>(a->exp);
+        if(b){
+            auto nextInstr = CodeBuffer::instance().emit(br_cond(b->get()));
+            b->data.add(nextInstr, FIRST, true);
+            b->data.add(nextInstr, SECOND, false);
+        }
+    }
 
 }
 
@@ -113,6 +121,7 @@ void SymbolTable::add_var(Variable *v, int offset) {
         auto& exp = new_arg->var->exp;
         CodeBuffer::instance().emit(get_alloca(new_arg->ptr_name(), new_arg->var->type->reg_type() ,new_arg->var->id->name()));
     }
+
 }
 
 void SymbolTable::add_var(STYPE *v) {
@@ -156,12 +165,14 @@ void SymbolTable::assign(STYPE *id_st, STYPE *exp_st) {
     if(!(id_t->name() == exp_type->name() || (id_t->name() == "INT" && exp_type->name() == "BYTE")))
         output::errorMismatch(yylineno);
     auto arg = get_id_arg(id);
+    arg->var->exp->val=dynamic_cast<Exp *>(exp_st)->val;
     if(!dynamic_cast<Exp *>(exp_st)->is_raw){
         return;
         //output::errorSyn(yylineno);
     }
     CodeBuffer::instance().emit(store(dynamic_cast<Exp *>(exp_st)->get(),arg->var->type->reg_type() ,arg->ptr_name()));
     arg->var->exp->reg= nullptr;
+
 
 }
 

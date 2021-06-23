@@ -61,7 +61,7 @@ Boolean::Boolean(STYPE *e1, STYPE* op, STYPE *e2) {
 
 
 
-Boolean::Boolean(STYPE *e) {
+Boolean::Boolean(STYPE *e) {//not
     is_raw=false;
     if(is_bool(e)) {
         auto temp = data.falseList;
@@ -78,6 +78,13 @@ Boolean::Boolean(bool val, bool br) :Exp(val), data(){
         data.add(nextInstr, FIRST, val);
         is_raw=true;
     }
+
+}
+
+Boolean::Boolean(Id* id) {
+    //auto nextInstr = CodeBuffer::instance().emit(br_cond(id->name()));
+    //data.add(nextInstr, FIRST, true);
+    //data.add(nextInstr, SECOND, false);
 
 }
 
@@ -166,9 +173,9 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
     if(st->get_func_type(id)->RetType->name()=="VOID")
         CodeBuffer::instance().emit(call_void(t->reg_type(), id->name(), str_args));
     else {
+        this->reg = RegisterManager::instance().alloc(32);
         CodeBuffer::instance().emit(
                 call(this->reg->name(), t->reg_type(), id->name(), str_args));
-        this->reg = RegisterManager::instance().alloc(32);
     }
 }
 
@@ -249,23 +256,24 @@ Exp *binop(STYPE *e1, STYPE *op, STYPE *e2) {
     if(!binop)
         output::errorMismatch(yylineno);
     string arith;
+    auto v1 = exp->val, v2 = exp->val;
     if(binop->op=="/"){
-//        if(v2==0) {
-//            output::errorDivisionByZero();
-//        }
-        //exp->val=v1/v2;
+        if(v2==0) {
+            output::errorDivisionByZero();
+        }
+        exp->val=v1/v2;
         arith = "sdiv";
     }
     else if(binop->op=="*") {
-        //exp->val=v1*v2;
+        exp->val=v1*v2;
         arith = "mul";
     }
     else if(binop->op=="+") {
-        //exp->val=v1+v2;
+        exp->val=v1+v2;
         arith = "add";
     }
     else if(binop->op=="-") {
-        //exp->val=v1-v2;
+        exp->val=v1-v2;
         arith = "sub";
     }
     else {
@@ -306,7 +314,7 @@ Variable::Variable(STYPE *type, STYPE *id, STYPE *exp) : type(dynamic_cast<Type 
         else if(this->type->name()=="BYTE")
             this->exp = new NumB("0");
         else if(this->type->name()=="BOOL")
-            this->exp = new Boolean();
+            this->exp = new Boolean(this->id);
     }
 
 }

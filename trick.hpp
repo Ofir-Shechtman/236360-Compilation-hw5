@@ -107,7 +107,8 @@ struct MarkerAssign : public Statement{
     explicit MarkerAssign(Id* id):id(id){
         if(id) {
             auto arg = SymbolTable::GetInstance()->get_id_arg(id);
-            is_b = dynamic_cast<Boolean *>(arg->var->exp) != nullptr;
+            if(arg)
+                is_b = dynamic_cast<Boolean *>(arg->var->exp) != nullptr;
         }
         if(is_b){
             auto& cb = CodeBuffer::instance();
