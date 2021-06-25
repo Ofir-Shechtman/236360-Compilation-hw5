@@ -36,6 +36,8 @@ Statement::Statement(IfStatement *ifst, MarkerN* n, Scope *s) {
     auto temp2 = CodeBuffer::merge(temp1, s2->nextList);
     nextList = CodeBuffer::merge(temp2, nextList);
     cb.bpatch(nextList, cb.genLabel());
+    merge(s1);
+    merge(s2);
 
 }
 
@@ -93,8 +95,8 @@ Statement::Statement(Exp* e, MarkerN* n, CaseList* cl) {
                 nextList = CodeBuffer::merge(nextList, cl->cl[i]->nextList);
             nextList = CodeBuffer::merge(nextList, cl->cl[i]->breakList);
         }
-
     }
+    continueList = cl->continueList;
     CodeBuffer::instance().bpatch(nextList, next_label);
 }
 
@@ -126,11 +128,17 @@ Statement::Statement(MarkerAssign *m, Exp *e) {
 Boolean::Boolean(STYPE *e1, STYPE *sop, STYPE *sm, STYPE *e2) {
     is_raw=false;
     auto id1=dynamic_cast<Id*>(e1);
-    if(id1)
-        e1=SymbolTable::GetInstance()->get_id_arg(id1)->var->exp;
+    if(id1){
+        auto arg = SymbolTable::GetInstance()->get_id_arg(id1);
+        if (!arg) output::errorUndef(yylineno, id1->name());
+        e1 = arg->var->exp;
+    }
     auto id2=dynamic_cast<Id*>(e2);
-    if(id2)
-        e2=SymbolTable::GetInstance()->get_id_arg(id2)->var->exp;
+    if(id2){
+        auto arg = SymbolTable::GetInstance()->get_id_arg(id2);
+        if (!arg) output::errorUndef(yylineno, id1->name());
+        e2 = arg->var->exp;
+    }
     auto c1=dynamic_cast<Call*>(e1);
     if(c1)
         e1=c1->e;

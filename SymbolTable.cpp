@@ -239,7 +239,7 @@ void SymbolTable::check_return(STYPE *t) {
 
 void SymbolTable::check_while(STYPE *t) const {
     Type *ret = (dynamic_cast<ReturnType *>(t));
-    if(in_switch) {
+    if(in_switch && !in_while) {
         if (ret->name() == "continue")
             output::errorUnexpectedContinue(yylineno);
     }
@@ -290,7 +290,7 @@ void Id::run_bool_check(){
     auto b = dynamic_cast<Boolean*>(arg->var->exp);
     if(b){
         auto nextInstr = CodeBuffer::instance().emit(br_cond(arg->var->id->get()));
-        arg->var->exp->reg= nullptr;
+        //arg->var->exp->reg= nullptr;
         b->data.add(nextInstr, FIRST, true);
         b->data.add(nextInstr, SECOND, false);
     }

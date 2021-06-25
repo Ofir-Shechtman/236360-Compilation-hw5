@@ -65,8 +65,11 @@ Boolean::Boolean(STYPE *e) {//not
     is_raw=false;
     if(is_bool(e)) {
         auto id=dynamic_cast<Id*>(e);
-        if(id)
-            e=SymbolTable::GetInstance()->get_id_arg(id)->var->exp;
+        if(id){
+            auto arg = SymbolTable::GetInstance()->get_id_arg(id);
+            if (!arg) output::errorUndef(yylineno, id->name());
+            e = arg->var->exp;
+        }
         auto b = dynamic_cast<Boolean*>(e);
         if(!b)
             b=dynamic_cast<Boolean*>(dynamic_cast<Call*>(e)->e);
@@ -127,8 +130,11 @@ bool is_type(STYPE* e, string type) {
     if(!exp)
         return false;
     auto id=dynamic_cast<Id*>(e);
-    if(id)
-        exp=SymbolTable::GetInstance()->get_id_arg(id)->var->exp;
+    if(id) {
+        auto arg = SymbolTable::GetInstance()->get_id_arg(id);
+        if (!arg) output::errorUndef(yylineno, id->name());
+        exp = arg->var->exp;
+    }
     string t;
     if(exp)
         t=exp->type()->name();
@@ -174,7 +180,16 @@ Call::Call(STYPE *id_st, STYPE *el_st) {
     for(auto a:el->exp_list){
         str_args.emplace_back(a->exp->get(true));
         if(a->type->name()=="BOOL") {
-            auto b = dynamic_cast<Boolean*>(a->exp);
+            auto eb = a->exp;
+            auto id=dynamic_cast<Id*>(eb);
+            if(id){
+                auto arg = SymbolTable::GetInstance()->get_id_arg(id);
+                if (!arg) output::errorUndef(yylineno, id->name());
+                eb = arg->var->exp;
+            }
+            auto b = dynamic_cast<Boolean*>(eb);
+            if(!b)
+                b=dynamic_cast<Boolean*>(dynamic_cast<Call*>(eb)->e);
             auto l = b->data.falseList;
             if(b->val)
                 l = b->data.trueList;
@@ -339,6 +354,8 @@ string Id::get(bool full_const) const {
     auto arg = SymbolTable::GetInstance()->get_id_arg(this);
     if (!arg)
         output::errorUndef(yylineno, this->name());
+    if(arg->offset>=0)
+        arg->var->exp->reg=nullptr;
     if (!arg->var->exp->reg){
         int bit = arg->var->type->name()=="BOOL" ? 1 : 32;
         auto& reg = arg->var->exp->reg;

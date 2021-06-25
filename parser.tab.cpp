@@ -1978,6 +1978,7 @@ int main(){
     load_const();
     auto p= yyparse();
     load_funcs();
+    SymbolTable::GetInstance()->print_funcs();
     CodeBuffer::instance().printGlobalBuffer();
     CodeBuffer::instance().printCodeBuffer();
     return p;

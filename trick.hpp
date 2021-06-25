@@ -77,8 +77,11 @@ struct IfStatement: public Statement{
         merge(this->s->s);
         if(!b) {
             auto id = dynamic_cast<Id*>(e);
-            if(id)
-                b = dynamic_cast<Boolean *>(SymbolTable::GetInstance()->get_id_arg(id)->var->exp);
+            if(id){
+                auto arg = SymbolTable::GetInstance()->get_id_arg(id);
+                if (!arg) output::errorUndef(yylineno, id->name());
+                b = dynamic_cast<Boolean *>(arg->var->exp);
+            }
             else
                 b=dynamic_cast<Boolean *>(dynamic_cast<Call *>(e)->e);
         }
